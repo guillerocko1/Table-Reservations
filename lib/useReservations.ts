@@ -5,6 +5,7 @@ import {
   computeFinalTime,
   statusFor,
   summarizeStatuses,
+  updateReservationFields,
   type Reservation,
   type ReservationInput,
   type ReservationStatus,
@@ -58,51 +59,42 @@ export function useReservations(): UseReservationsResult {
     return () => clearInterval(timer);
   }, []);
 
+  // store.save/store.clear are called here, in the event handler itself,
+  // rather than inside the setReservationsByTable updater below — updater
+  // functions run during React's render phase and aren't guaranteed to run
+  // exactly once (Strict Mode double-invokes them), so side effects like
+  // localStorage writes don't belong there.
   const saveReservation = useCallback(
     (tableNumber: number, input: ReservationInput) => {
-      setReservationsByTable((current) => {
-        const existing = current[tableNumber];
-        const reservation: Reservation = {
-          tableNumber,
-          guestName: input.guestName,
-          partySize: input.partySize,
-          celebration: input.celebration,
-          allergies: input.allergies,
-          reservationTime: input.reservationTime,
-          timeLimitMinutes: input.timeLimitMinutes,
-          startTime: existing?.startTime ?? null,
-          finalTime: existing?.finalTime ?? null,
-        };
-        store.save(reservation);
-        return { ...current, [tableNumber]: reservation };
-      });
+      const existing = reservationsByTable[tableNumber];
+      const reservation = updateReservationFields(existing, tableNumber, input);
+      store.save(reservation);
+      setReservationsByTable((current) => ({ ...current, [tableNumber]: reservation }));
     },
-    [store],
+    [reservationsByTable, store],
   );
 
   const seatTable = useCallback(
     (tableNumber: number, startTime: string) => {
-      setReservationsByTable((current) => {
-        const existing = current[tableNumber];
-        if (!existing) return current;
-        const updated: Reservation = {
-          ...existing,
-          startTime,
-          finalTime: computeFinalTime(startTime, existing.timeLimitMinutes),
-        };
-        store.save(updated);
-        return { ...current, [tableNumber]: updated };
-      });
+      const existing = reservationsByTable[tableNumber];
+      if (!existing) return;
+      const updated: Reservation = {
+        ...existing,
+        startTime,
+        finalTime: computeFinalTime(startTime, existing.timeLimitMinutes),
+      };
+      store.save(updated);
+      setReservationsByTable((current) => ({ ...current, [tableNumber]: updated }));
     },
-    [store],
+    [reservationsByTable, store],
   );
 
   const clearTable = useCallback(
     (tableNumber: number) => {
+      store.clear(tableNumber);
       setReservationsByTable((current) => {
         const next = { ...current };
         delete next[tableNumber];
-        store.clear(tableNumber);
         return next;
       });
     },
