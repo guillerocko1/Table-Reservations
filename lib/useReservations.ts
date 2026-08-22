@@ -26,16 +26,21 @@ export interface UseReservationsResult {
   clearTable: (tableNumber: number) => void;
 }
 
-function getBrowserStore(): { store: ReservationStore; isPersistent: boolean } {
+function getBrowserStore(): ReservationStore {
   if (typeof window !== "undefined" && isStoreAvailable(window.localStorage)) {
-    return { store: createReservationStore(window.localStorage), isPersistent: true };
+    return createReservationStore(window.localStorage);
   }
-  return { store: createReservationStore(createMemoryStore()), isPersistent: false };
+  return createReservationStore(createMemoryStore());
 }
 
 export function useReservations(): UseReservationsResult {
-  const [{ store, isPersistent }] = useState(getBrowserStore);
+  const [store] = useState(getBrowserStore);
   const [reservationsByTable, setReservationsByTable] = useState<Record<number, Reservation>>({});
+  // Starts true (the common case) so server and client agree on first
+  // paint; the store's identity can differ between environments since it's
+  // never rendered directly, but this flag IS rendered into JSX, so it must
+  // start identical everywhere and only pick up its real value post-mount.
+  const [isPersistent, setIsPersistent] = useState(true);
   const [now, setNow] = useState(new Date());
 
   // Load whatever was already saved once the component mounts on the
@@ -43,6 +48,7 @@ export function useReservations(): UseReservationsResult {
   // cause a hydration mismatch).
   useEffect(() => {
     setReservationsByTable(store.getAll());
+    setIsPersistent(typeof window !== "undefined" && isStoreAvailable(window.localStorage));
   }, [store]);
 
   // Re-derive statuses periodically so an Occupied table flips to Overdue
