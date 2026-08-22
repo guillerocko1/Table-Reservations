@@ -54,7 +54,10 @@ export function ReservationPanel({
         reservationTime: reservation.reservationTime,
         timeLimitMinutes: reservation.timeLimitMinutes,
       });
-      setStartTime(reservation.startTime ?? reservation.reservationTime);
+      // "Seat now" should default to right now, not the booked reservation
+      // time — only fall back to the booked time once it's actually seated.
+      const nowHHmm = new Date().toTimeString().slice(0, 5);
+      setStartTime(reservation.startTime ?? nowHHmm);
     } else {
       setInput(emptyInput());
       setStartTime("18:00");
