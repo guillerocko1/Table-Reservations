@@ -74,6 +74,14 @@ export function updateReservationFields(
   };
 }
 
+// Whole minutes elapsed since a table was seated. Same-day-only limitation
+// as the rest of this module (see timeToMinutes above); clamps to 0 rather
+// than going negative if startTime is somehow after now.
+export function minutesSince(startTime: string, now: Date): number {
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  return Math.max(0, nowMinutes - timeToMinutes(startTime));
+}
+
 export function statusFor(reservation: Reservation | undefined, now: Date): ReservationStatus {
   if (!reservation) return "available";
   if (!reservation.startTime || !reservation.finalTime) return "reserved";

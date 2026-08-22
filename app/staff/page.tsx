@@ -5,11 +5,14 @@ import Link from "next/link";
 import { useReservations } from "@/lib/useReservations";
 import { StatusSummary } from "@/components/StatusSummary";
 import { FloorPlan } from "@/components/FloorPlan";
-import { ReservationPanel } from "@/components/ReservationPanel";
+import { ReservationDetails } from "@/components/ReservationDetails";
 
-export default function Home() {
-  const { reservationsByTable, isPersistent, getStatus, summary, now, saveReservation, seatTable, clearTable } =
-    useReservations();
+// Read-only mirror of the admin page ("/"): same live data via the same
+// hook, same floor plan, but selecting a table opens ReservationDetails
+// instead of ReservationPanel — no add/edit/seat/clear controls anywhere
+// on this page.
+export default function StaffView() {
+  const { reservationsByTable, isPersistent, getStatus, summary, now } = useReservations();
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
 
   return (
@@ -17,19 +20,18 @@ export default function Home() {
       <header className="flex items-start justify-between gap-4">
         <div>
           <h1 className="font-serif text-3xl font-bold text-[var(--color-text)]">Table Reservations</h1>
-          <p className="text-sm text-[var(--color-text-muted)]">Bar and main dining floor plan</p>
+          <p className="text-sm text-[var(--color-text-muted)]">Staff view — click a table to see its details</p>
           {!isPersistent && (
             <p className="mt-2 rounded-md bg-[var(--color-overdue-bg)] px-3 py-2 text-sm text-[var(--color-overdue-text)]">
-              Your browser isn&apos;t saving changes between visits (private browsing?). Changes will be lost
-              when you close this tab.
+              This browser isn&apos;t saving changes between visits (private browsing?).
             </p>
           )}
         </div>
         <Link
-          href="/staff"
+          href="/"
           className="whitespace-nowrap text-sm font-medium text-[var(--color-accent)] underline"
         >
-          View as staff →
+          Admin view →
         </Link>
       </header>
 
@@ -42,15 +44,11 @@ export default function Home() {
         onSelectTable={setSelectedTable}
       />
 
-      <ReservationPanel
+      <ReservationDetails
         tableNumber={selectedTable}
         reservation={selectedTable !== null ? reservationsByTable[selectedTable] : undefined}
-        onSave={(tableNumber, input) => saveReservation(tableNumber, input)}
-        onSeat={(tableNumber, startTime) => seatTable(tableNumber, startTime)}
-        onClear={(tableNumber) => {
-          clearTable(tableNumber);
-          setSelectedTable(null);
-        }}
+        status={selectedTable !== null ? getStatus(selectedTable) : "available"}
+        now={now}
         onClose={() => setSelectedTable(null)}
       />
     </main>

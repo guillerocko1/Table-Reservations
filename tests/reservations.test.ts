@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   computeFinalTime,
+  minutesSince,
   statusFor,
   updateReservationFields,
   validateReservationInput,
@@ -145,6 +146,27 @@ test("updateReservationFields: unrelated field edits on a seated table keep star
   assert.equal(result.startTime, "18:00");
   assert.equal(result.finalTime, "19:30");
   assert.equal(result.guestName, "Jordan Lee");
+});
+
+test("minutesSince: counts whole minutes elapsed since start time", () => {
+  const now = new Date();
+  now.setHours(18, 23, 0, 0);
+  assert.equal(minutesSince("18:00", now), 23);
+});
+
+test("minutesSince: zero right at the start time", () => {
+  const now = new Date();
+  now.setHours(18, 0, 0, 0);
+  assert.equal(minutesSince("18:00", now), 0);
+});
+
+test("minutesSince: clamps to zero for a start time later than now", () => {
+  // Same-day-only limitation (see comment above timeToMinutes): a start
+  // time after "now" shouldn't ever happen in normal use, but if it does
+  // (e.g. a manually-edited future time), clamp rather than show negative.
+  const now = new Date();
+  now.setHours(18, 0, 0, 0);
+  assert.equal(minutesSince("18:30", now), 0);
 });
 
 test("summarizeStatuses counts every table into exactly one bucket", () => {

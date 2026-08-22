@@ -5,10 +5,11 @@ import { TableCard } from "./TableCard";
 interface FloorPlanProps {
   reservationsByTable: Record<number, Reservation>;
   getStatus: (tableNumber: number) => ReservationStatus;
+  now: Date;
   onSelectTable: (tableNumber: number) => void;
 }
 
-export function FloorPlan({ reservationsByTable, getStatus, onSelectTable }: FloorPlanProps) {
+export function FloorPlan({ reservationsByTable, getStatus, now, onSelectTable }: FloorPlanProps) {
   return (
     <div className="flex flex-col gap-8">
       {ZONES.map((zone) => (
@@ -23,6 +24,7 @@ export function FloorPlan({ reservationsByTable, getStatus, onSelectTable }: Flo
                 tableNumber={tableNumber}
                 status={getStatus(tableNumber)}
                 reservation={reservationsByTable[tableNumber]}
+                now={now}
                 onSelect={onSelectTable}
               />
             ))}

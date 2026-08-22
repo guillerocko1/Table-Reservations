@@ -1,9 +1,10 @@
-import type { Reservation, ReservationStatus } from "@/lib/reservations";
+import { minutesSince, type Reservation, type ReservationStatus } from "@/lib/reservations";
 
 interface TableCardProps {
   tableNumber: number;
   status: ReservationStatus;
   reservation: Reservation | undefined;
+  now: Date;
   onSelect: (tableNumber: number) => void;
 }
 
@@ -25,7 +26,14 @@ const STATUS_LABELS: Record<ReservationStatus, string> = {
   overdue: "Overdue",
 };
 
-export function TableCard({ tableNumber, status, reservation, onSelect }: TableCardProps) {
+export function TableCard({ tableNumber, status, reservation, now, onSelect }: TableCardProps) {
+  // Only a seated table has a start time to count from — Available/Reserved
+  // tables show no counter.
+  const seatedMinutes =
+    reservation?.startTime && (status === "occupied" || status === "overdue")
+      ? minutesSince(reservation.startTime, now)
+      : null;
+
   return (
     <button
       type="button"
@@ -38,6 +46,9 @@ export function TableCard({ tableNumber, status, reservation, onSelect }: TableC
         <span className="truncate text-xs">
           {reservation.guestName} · {reservation.partySize}
         </span>
+      )}
+      {seatedMinutes !== null && (
+        <span className="text-[10px] font-semibold text-[var(--color-text-muted)]">{seatedMinutes} min</span>
       )}
     </button>
   );
