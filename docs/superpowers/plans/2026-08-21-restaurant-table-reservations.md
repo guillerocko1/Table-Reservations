@@ -1092,23 +1092,33 @@ export interface UseReservationsResult {
   clearTable: (tableNumber: number) => void;
 }
 
-function getBrowserStore(): { store: ReservationStore; isPersistent: boolean } {
+function getBrowserStore(): ReservationStore {
   if (typeof window !== "undefined" && isStoreAvailable(window.localStorage)) {
-    return { store: createReservationStore(window.localStorage), isPersistent: true };
+    return createReservationStore(window.localStorage);
   }
-  return { store: createReservationStore(createMemoryStore()), isPersistent: false };
+  return createReservationStore(createMemoryStore());
 }
 
 export function useReservations(): UseReservationsResult {
-  const [{ store, isPersistent }] = useState(getBrowserStore);
+  const [store] = useState(getBrowserStore);
   const [reservationsByTable, setReservationsByTable] = useState<Record<number, Reservation>>({});
   const [now, setNow] = useState(new Date());
+  // Starts true (assume a normal, working browser) so the first client
+  // render matches the server-rendered HTML — corrected below once the
+  // real check can run. Computing this synchronously inside the lazy
+  // useState initializer above would hydration-mismatch: it evaluates
+  // once during SSR (no `window`, so it'd be false) and again during
+  // client hydration (real `window`, so it'd flip to true), producing
+  // different first-paint output for the `!isPersistent` banner.
+  const [isPersistent, setIsPersistent] = useState(true);
 
   // Load whatever was already saved once the component mounts on the
   // client (server-rendered output always starts empty, so this can't
-  // cause a hydration mismatch).
+  // cause a hydration mismatch), and resolve the real persistence flag
+  // at the same time.
   useEffect(() => {
     setReservationsByTable(store.getAll());
+    setIsPersistent(typeof window !== "undefined" && isStoreAvailable(window.localStorage));
   }, [store]);
 
   // Re-derive statuses periodically so an Occupied table flips to Overdue
