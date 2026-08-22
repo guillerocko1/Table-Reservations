@@ -50,6 +50,30 @@ export function computeFinalTime(startTime: string, timeLimitMinutes: TimeLimitM
   return minutesToTime(timeToMinutes(startTime) + timeLimitMinutes);
 }
 
+// Builds the next Reservation record for a save: form fields always come
+// from `input`, but `startTime` carries over from `existing` (a table isn't
+// seated just because its details were edited), and `finalTime` must be
+// re-derived from `timeLimitMinutes` every time since the caller may have
+// just changed it on an already-seated table.
+export function updateReservationFields(
+  existing: Reservation | undefined,
+  tableNumber: number,
+  input: ReservationInput,
+): Reservation {
+  const startTime = existing?.startTime ?? null;
+  return {
+    tableNumber,
+    guestName: input.guestName,
+    partySize: input.partySize,
+    celebration: input.celebration,
+    allergies: input.allergies,
+    reservationTime: input.reservationTime,
+    timeLimitMinutes: input.timeLimitMinutes,
+    startTime,
+    finalTime: startTime ? computeFinalTime(startTime, input.timeLimitMinutes) : null,
+  };
+}
+
 export function statusFor(reservation: Reservation | undefined, now: Date): ReservationStatus {
   if (!reservation) return "available";
   if (!reservation.startTime || !reservation.finalTime) return "reserved";

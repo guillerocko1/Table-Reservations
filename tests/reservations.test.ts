@@ -3,9 +3,11 @@ import assert from "node:assert/strict";
 import {
   computeFinalTime,
   statusFor,
+  updateReservationFields,
   validateReservationInput,
   summarizeStatuses,
   type Reservation,
+  type ReservationInput,
 } from "../lib/reservations.ts";
 
 function makeReservation(overrides: Partial<Reservation> = {}): Reservation {
@@ -99,6 +101,50 @@ test("validateReservationInput: rejects zero or fractional party size", () => {
     timeLimitMinutes: 60,
   });
   assert.equal(fractional.valid, false);
+});
+
+function makeInput(overrides: Partial<ReservationInput> = {}): ReservationInput {
+  return {
+    guestName: "Alex Rivera",
+    partySize: 2,
+    celebration: "None",
+    allergies: "",
+    reservationTime: "18:00",
+    timeLimitMinutes: 90,
+    ...overrides,
+  };
+}
+
+test("updateReservationFields: brand new table stays unseated with no finalTime", () => {
+  const result = updateReservationFields(undefined, 1, makeInput());
+  assert.equal(result.startTime, null);
+  assert.equal(result.finalTime, null);
+});
+
+test("updateReservationFields: editing an unseated reservation still has no finalTime", () => {
+  const existing = makeReservation({ startTime: null, finalTime: null, timeLimitMinutes: 60 });
+  const result = updateReservationFields(existing, 1, makeInput({ timeLimitMinutes: 120 }));
+  assert.equal(result.startTime, null);
+  assert.equal(result.finalTime, null);
+  assert.equal(result.timeLimitMinutes, 120);
+});
+
+test("updateReservationFields: changing timeLimitMinutes on a seated table recomputes finalTime", () => {
+  // Regression test: seat a table at 18:00 with a 60-minute limit, then edit
+  // just the time limit to 120 minutes — finalTime must move from 19:00 to
+  // 20:00 instead of staying frozen at the value computed at seat-time.
+  const existing = makeReservation({ startTime: "18:00", finalTime: "19:00", timeLimitMinutes: 60 });
+  const result = updateReservationFields(existing, 1, makeInput({ timeLimitMinutes: 120 }));
+  assert.equal(result.startTime, "18:00");
+  assert.equal(result.finalTime, "20:00");
+});
+
+test("updateReservationFields: unrelated field edits on a seated table keep startTime and recompute finalTime", () => {
+  const existing = makeReservation({ startTime: "18:00", finalTime: "19:30", timeLimitMinutes: 90 });
+  const result = updateReservationFields(existing, 1, makeInput({ guestName: "Jordan Lee", timeLimitMinutes: 90 }));
+  assert.equal(result.startTime, "18:00");
+  assert.equal(result.finalTime, "19:30");
+  assert.equal(result.guestName, "Jordan Lee");
 });
 
 test("summarizeStatuses counts every table into exactly one bucket", () => {
