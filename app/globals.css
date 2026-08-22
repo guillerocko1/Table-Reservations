@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+/* Design tokens for the reservation app. Change values here (not
+   per-component) to re-theme the whole app. */
+:root {
+  --color-bg: #faf7f2;
+  --color-surface: #ffffff;
+  --color-border: #e4ded3;
+  --color-text: #241c14;
+  --color-text-muted: #7a6f60;
+  --color-accent: #b5502f;
+  --color-accent-hover: #963f23;
+
+  --color-available-bg: #eef1ec;
+  --color-available-border: #b7c4b3;
+  --color-available-text: #3d4a3a;
+
+  --color-reserved-bg: #e7eef7;
+  --color-reserved-border: #7fa3d1;
+  --color-reserved-text: #1f3a5f;
+
+  --color-occupied-bg: #fbf1dc;
+  --color-occupied-border: #dca43c;
+  --color-occupied-text: #6b4a12;
+
+  --color-overdue-bg: #fbeae7;
+  --color-overdue-border: #dd6355;
+  --color-overdue-text: #7a2018;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
