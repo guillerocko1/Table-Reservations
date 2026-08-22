@@ -1,0 +1,32 @@
+{
+  "name": "restaurant-reservations",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Table reservation dashboard for bar and main dining sections.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test tests/**/*.test.ts",
+    "pre-commit": "npm run lint && npm run typecheck && npm run test"
+  },
+  "dependencies": {
+    "next": "16.3.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3",
+    "@types/node": "26.2.0",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "tailwindcss": "4.3.3",
+    "@tailwindcss/postcss": "4.3.3",
+    "eslint": "10.8.1",
+    "@eslint/js": "10.0.1",
+    "typescript-eslint": "8.67.0"
+  }
+}
