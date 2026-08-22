@@ -1,0 +1,93 @@
+export type Celebration = "None" | "Birthday" | "Anniversary" | "Engagement" | "Other";
+export type TimeLimitMinutes = 30 | 60 | 90 | 120;
+export type ReservationStatus = "available" | "reserved" | "occupied" | "overdue";
+
+export interface Reservation {
+  tableNumber: number;
+  guestName: string;
+  partySize: number;
+  celebration: Celebration;
+  allergies: string;
+  reservationTime: string;
+  startTime: string | null;
+  timeLimitMinutes: TimeLimitMinutes;
+  finalTime: string | null;
+}
+
+export interface ReservationInput {
+  guestName: string;
+  partySize: number;
+  celebration: Celebration;
+  allergies: string;
+  reservationTime: string;
+  timeLimitMinutes: TimeLimitMinutes;
+}
+
+export interface StatusSummary {
+  available: number;
+  reserved: number;
+  occupied: number;
+  overdue: number;
+}
+
+const VALID_TIME_LIMITS: TimeLimitMinutes[] = [30, 60, 90, 120];
+
+// Times are plain "HH:mm" strings within a single day — a reservation whose
+// window crosses midnight is out of scope for this demo (see spec).
+function timeToMinutes(time: string): number {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+}
+
+function minutesToTime(totalMinutes: number): string {
+  const normalized = ((totalMinutes % 1440) + 1440) % 1440;
+  const hours = Math.floor(normalized / 60);
+  const minutes = normalized % 60;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
+export function computeFinalTime(startTime: string, timeLimitMinutes: TimeLimitMinutes): string {
+  return minutesToTime(timeToMinutes(startTime) + timeLimitMinutes);
+}
+
+export function statusFor(reservation: Reservation | undefined, now: Date): ReservationStatus {
+  if (!reservation) return "available";
+  if (!reservation.startTime || !reservation.finalTime) return "reserved";
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const finalMinutes = timeToMinutes(reservation.finalTime);
+  return nowMinutes > finalMinutes ? "overdue" : "occupied";
+}
+
+export function validateReservationInput(
+  input: ReservationInput,
+): { valid: boolean; errors: Partial<Record<keyof ReservationInput, string>> } {
+  const errors: Partial<Record<keyof ReservationInput, string>> = {};
+
+  if (!input.guestName.trim()) {
+    errors.guestName = "Guest name is required.";
+  }
+  if (!Number.isInteger(input.partySize) || input.partySize < 1) {
+    errors.partySize = "Party size must be a whole number of at least 1.";
+  }
+  if (!VALID_TIME_LIMITS.includes(input.timeLimitMinutes)) {
+    errors.timeLimitMinutes = "Time limit must be 30, 60, 90, or 120 minutes.";
+  }
+  if (!input.reservationTime) {
+    errors.reservationTime = "Reservation time is required.";
+  }
+
+  return { valid: Object.keys(errors).length === 0, errors };
+}
+
+export function summarizeStatuses(
+  reservationsByTable: Record<number, Reservation>,
+  allTableNumbers: number[],
+  now: Date,
+): StatusSummary {
+  const summary: StatusSummary = { available: 0, reserved: 0, occupied: 0, overdue: 0 };
+  for (const tableNumber of allTableNumbers) {
+    const status = statusFor(reservationsByTable[tableNumber], now);
+    summary[status] += 1;
+  }
+  return summary;
+}
