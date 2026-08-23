@@ -186,7 +186,7 @@ export function ReservationPanel({
             Final time is calculated automatically as start time + time limit.
           </p>
           {reservation?.finalTime && (
-            <p className="mt-1 text-sm font-medium text-[var(--color-text)]">
+            <p className="mt-1 text-lg font-semibold text-[var(--color-overdue-text)]">
               Final time: {reservation.finalTime}
             </p>
           )}
