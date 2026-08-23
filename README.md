@@ -1,10 +1,11 @@
 # Restaurant Table Reservations
 
 A single-restaurant table reservation dashboard for front-of-house staff.
-Color-coded floor plan (Bar + 4 Main Dining zones) where employees can add,
-seat, and clear reservations, with a live counter of minutes seated on
-occupied tables. This is a click-through demo: no backend, no login — all
-data is saved to your browser's `localStorage`.
+Color-coded floor plan — laid out to match the restaurant's actual
+seating chart — where employees can add, seat, and clear reservations,
+with a live counter of minutes seated on occupied tables. This is a
+click-through demo: no backend, no login — all data is saved to your
+browser's `localStorage`.
 
 ## Running it
 
@@ -20,18 +21,19 @@ controls anywhere on that page.
 
 ## Table layout
 
-- Bar: 1–16
-- Main Dining A: 31–37
-- Main Dining B: 41–47
-- Main Dining C: 51–56
-- Main Dining D: 61–63
+- Bar Lounge: 61–63 (rectangular tables, shown in their own column near the entry)
+- Bar: 1–16 (individual numbered seats along the bar)
+- High-Tops: 21–29 (individual numbered stools, three clusters of 3)
+- Main Dining — Row 1: 31–37
+- Main Dining — Row 2: 41–47
+- Main Dining — Booths: 51–56 (curved booth seating; 56 is the large round booth)
 
 ## Checks
 
 ```bash
 npm run typecheck   # TypeScript
 npm run lint        # ESLint
-npm run test        # unit tests for lib/tables.ts, lib/reservations.ts (incl. minutesSince), lib/store.ts
+npm run test        # unit tests for lib/tables.ts (incl. isWideTable), lib/reservations.ts (incl. minutesSince), lib/store.ts
 npm run build       # production build
 ```
 
