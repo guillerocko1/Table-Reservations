@@ -28,13 +28,16 @@ const STATUS_LABELS: Record<ReservationStatus, string> = {
   overdue: "Overdue",
 };
 
-// Per-shape frame classes. Seats are small fixed-size circles (bar stools /
-// high-tops); tables and booths are grid cells sized by their container,
-// differing only in corner rounding to suggest the booths' curved backs.
+// Per-shape frame classes. Every shape is a fixed size (not sized by its
+// container), so a table looks identical everywhere it appears on the page
+// — Bar Lounge included — regardless of which column it's laid out in.
+// Seats are small circles (bar stools / high-tops); tables and booths are
+// the same larger size, differing only in corner rounding to suggest the
+// booths' curved backs.
 const SHAPE_FRAME: Record<TableShape, string> = {
   seat: "h-14 w-14 shrink-0 rounded-full",
-  table: "aspect-square w-full rounded-lg",
-  booth: "aspect-square w-full rounded-t-[999px] rounded-b-lg",
+  table: "h-28 w-28 shrink-0 rounded-lg",
+  booth: "h-28 w-28 shrink-0 rounded-t-[999px] rounded-b-lg",
 };
 
 export function TableCard({ tableNumber, status, reservation, now, shape, onSelect }: TableCardProps) {
