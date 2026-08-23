@@ -2,29 +2,29 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ZONES, ALL_TABLE_NUMBERS } from "../lib/tables.ts";
 
-test("bar-lounge zone covers tables 61 to 63", () => {
+test("bar-lounge zone covers tables 61 to 63, displayed top to bottom as 63, 62, 61", () => {
   const barLounge = ZONES.find((zone) => zone.id === "bar-lounge");
   assert.ok(barLounge);
-  assert.deepEqual(barLounge.tableNumbers, [61, 62, 63]);
+  assert.deepEqual(barLounge.tableNumbers, [63, 62, 61]);
 });
 
-test("bar zone covers tables 1 to 16", () => {
+test("bar zone covers tables 1 to 16, displayed right to left as 16 down to 1", () => {
   const bar = ZONES.find((zone) => zone.id === "bar");
   assert.ok(bar);
-  assert.deepEqual(bar.tableNumbers, Array.from({ length: 16 }, (_, i) => i + 1));
+  assert.deepEqual(bar.tableNumbers, Array.from({ length: 16 }, (_, i) => 16 - i));
 });
 
-test("high-tops zone covers tables 21 to 29", () => {
+test("high-tops zone covers tables 21 to 29, displayed right to left as 29 down to 21", () => {
   const highTops = ZONES.find((zone) => zone.id === "high-tops");
   assert.ok(highTops);
-  assert.deepEqual(highTops.tableNumbers, Array.from({ length: 9 }, (_, i) => i + 21));
+  assert.deepEqual(highTops.tableNumbers, Array.from({ length: 9 }, (_, i) => 29 - i));
 });
 
-test("main dining zones cover the documented ranges", () => {
+test("main dining zones cover the documented ranges, displayed right to left", () => {
   const expected: Record<string, number[]> = {
-    "main-a": [31, 32, 33, 34, 35, 36, 37],
-    "main-b": [41, 42, 43, 44, 45, 46, 47],
-    "main-c": [51, 52, 53, 54, 55, 56],
+    "main-a": [37, 36, 35, 34, 33, 32, 31],
+    "main-b": [47, 46, 45, 44, 43, 42, 41],
+    "main-c": [56, 55, 54, 53, 52, 51],
   };
   for (const [id, numbers] of Object.entries(expected)) {
     const zone = ZONES.find((z) => z.id === id);
