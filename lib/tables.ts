@@ -30,12 +30,3 @@ export const ZONES: Zone[] = [
 ];
 
 export const ALL_TABLE_NUMBERS: number[] = ZONES.flatMap((zone) => zone.tableNumbers);
-
-// These tables are drawn noticeably wider in the real floor plan (more
-// seats fit around them) — the floor plan gives them a wider card instead
-// of tracking each table's exact real-world width.
-const WIDE_TABLE_NUMBERS = new Set([33, 34, 36, 44, 45, 56]);
-
-export function isWideTable(tableNumber: number): boolean {
-  return WIDE_TABLE_NUMBERS.has(tableNumber);
-}

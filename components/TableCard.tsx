@@ -7,10 +7,6 @@ interface TableCardProps {
   reservation: Reservation | undefined;
   now: Date;
   shape: TableShape;
-  /** Tables 33/34/36/44/45/56 are drawn noticeably wider in the real floor
-   *  plan (more seats fit around them) — span two grid columns to hint at
-   *  that instead of tracking exact widths for every table. */
-  wide?: boolean;
   onSelect: (tableNumber: number) => void;
 }
 
@@ -41,7 +37,7 @@ const SHAPE_FRAME: Record<TableShape, string> = {
   booth: "aspect-square w-full rounded-t-[999px] rounded-b-lg",
 };
 
-export function TableCard({ tableNumber, status, reservation, now, shape, wide, onSelect }: TableCardProps) {
+export function TableCard({ tableNumber, status, reservation, now, shape, onSelect }: TableCardProps) {
   // Only a seated table has a start time to count from — Available/Reserved
   // tables show no counter.
   const seatedMinutes =
@@ -73,7 +69,7 @@ export function TableCard({ tableNumber, status, reservation, now, shape, wide, 
     <button
       type="button"
       onClick={() => onSelect(tableNumber)}
-      className={`flex flex-col items-center justify-center gap-1 border-2 p-2 text-center transition hover:brightness-95 ${SHAPE_FRAME[shape]} ${STATUS_STYLES[status]} ${wide ? "sm:col-span-2" : ""}`}
+      className={`flex flex-col items-center justify-center gap-1 border-2 p-2 text-center transition hover:brightness-95 ${SHAPE_FRAME[shape]} ${STATUS_STYLES[status]}`}
     >
       <span className="font-serif text-xl font-bold">{tableNumber}</span>
       <span className="text-[11px] font-medium uppercase tracking-wide">{STATUS_LABELS[status]}</span>

@@ -1,4 +1,4 @@
-import { ZONES, isWideTable, type Zone } from "@/lib/tables";
+import { ZONES, type Zone } from "@/lib/tables";
 import type { Reservation, ReservationStatus } from "@/lib/reservations";
 import { TableCard } from "./TableCard";
 
@@ -59,7 +59,6 @@ function ZoneSection({ zone, reservationsByTable, getStatus, now, onSelectTable 
             reservation={reservationsByTable[tableNumber]}
             now={now}
             shape={zone.shape}
-            wide={isWideTable(tableNumber)}
             onSelect={onSelectTable}
           />
         ))}
