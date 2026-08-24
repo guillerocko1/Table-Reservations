@@ -1,4 +1,4 @@
-import { ZONES, isRoundTable, type Zone } from "@/lib/tables";
+import { ZONES, isRoundTable, isSmallTable, isWideTable, type Zone } from "@/lib/tables";
 import type { Reservation, ReservationStatus } from "@/lib/reservations";
 import { TableCard } from "./TableCard";
 
@@ -68,7 +68,9 @@ interface ZoneSectionProps {
    *  instead of packing them to the left — used for Bar, High-Tops, and the
    *  booths, so all three match the row width the dining tables use. */
   distribute?: boolean;
-  /** Render every table in this zone a size down — used for Bar Lounge. */
+  /** Render every table in this zone a size down — used for Bar Lounge and
+   *  Bar; individual 2-top dining tables get this treatment per-table
+   *  instead (see isSmallTable below), regardless of this flag. */
   small?: boolean;
 }
 
@@ -89,7 +91,8 @@ function ZoneSection({ zone, reservationsByTable, getStatus, now, onSelectTable,
             now={now}
             shape={zone.shape}
             round={isRoundTable(tableNumber)}
-            small={small}
+            small={small || isSmallTable(tableNumber)}
+            wide={isWideTable(tableNumber)}
             onSelect={onSelectTable}
           />
         ))}

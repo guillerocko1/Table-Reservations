@@ -41,3 +41,19 @@ export const ALL_TABLE_NUMBERS: number[] = ZONES.flatMap((zone) => zone.tableNum
 export function isRoundTable(tableNumber: number): boolean {
   return tableNumber === 56;
 }
+
+// These main dining tables seat 2 and render a size down from the standard
+// table frame.
+const SMALL_TABLE_NUMBERS = new Set([31, 32, 35, 37, 41, 43, 46, 47]);
+
+export function isSmallTable(tableNumber: number): boolean {
+  return SMALL_TABLE_NUMBERS.has(tableNumber);
+}
+
+// These main dining tables render wider than the standard table frame
+// (same height, more width) — larger tables that seat more people.
+const WIDE_TABLE_NUMBERS = new Set([34, 44]);
+
+export function isWideTable(tableNumber: number): boolean {
+  return WIDE_TABLE_NUMBERS.has(tableNumber);
+}

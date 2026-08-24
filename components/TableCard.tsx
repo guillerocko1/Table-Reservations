@@ -13,8 +13,13 @@ interface TableCardProps {
   round?: boolean;
   /** Bar Lounge (61-63) renders a size down from the standard table/booth
    *  frame; Bar (1-16) renders a size down from the standard seat frame —
-   *  16 seats need to be smaller than High-Tops' 9 to fit the same width. */
+   *  16 seats need to be smaller than High-Tops' 9 to fit the same width;
+   *  and the eight 2-top dining tables (31/32/35/37/41/43/46/47) render a
+   *  size down too. */
   small?: boolean;
+  /** Tables 34 and 44 — wider than the standard table frame (same height,
+   *  more width), for tables that seat more people. */
+  wide?: boolean;
   onSelect: (tableNumber: number) => void;
 }
 
@@ -60,7 +65,20 @@ const SMALL_FRAME = "h-24 w-24 shrink-0 rounded-lg";
 // fit, edge to edge, across the same width High-Tops' 9 seats use.
 const SMALL_SEAT_FRAME = "h-10 w-10 shrink-0 rounded-full";
 
-export function TableCard({ tableNumber, status, reservation, now, shape, round, small, onSelect }: TableCardProps) {
+// Tables 34/44's frame — same height as a standard table, noticeably wider.
+const WIDE_FRAME = "h-28 w-44 shrink-0 rounded-lg";
+
+export function TableCard({
+  tableNumber,
+  status,
+  reservation,
+  now,
+  shape,
+  round,
+  small,
+  wide,
+  onSelect,
+}: TableCardProps) {
   // Only a seated table has a start time to count from — Available/Reserved
   // tables show no counter.
   const seatedMinutes =
@@ -92,7 +110,7 @@ export function TableCard({ tableNumber, status, reservation, now, shape, round,
     );
   }
 
-  const frameClass = round ? ROUND_FRAME : small ? SMALL_FRAME : SHAPE_FRAME[shape];
+  const frameClass = round ? ROUND_FRAME : wide ? WIDE_FRAME : small ? SMALL_FRAME : SHAPE_FRAME[shape];
 
   return (
     <button

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ZONES, ALL_TABLE_NUMBERS, isRoundTable } from "../lib/tables.ts";
+import { ZONES, ALL_TABLE_NUMBERS, isRoundTable, isSmallTable, isWideTable } from "../lib/tables.ts";
 
 test("bar-lounge zone covers tables 61 to 63, displayed top to bottom as 63, 62, 61", () => {
   const barLounge = ZONES.find((zone) => zone.id === "bar-lounge");
@@ -52,4 +52,37 @@ test("isRoundTable: only table 56 is the round booth", () => {
   assert.equal(isRoundTable(56), true);
   assert.equal(isRoundTable(55), false);
   assert.equal(isRoundTable(51), false);
+});
+
+test("isSmallTable: only the eight documented 2-top tables are small", () => {
+  const small = [31, 32, 35, 37, 41, 43, 46, 47];
+  for (const tableNumber of small) {
+    assert.equal(isSmallTable(tableNumber), true, `expected ${tableNumber} to be small`);
+  }
+  const notSmall = [33, 34, 36, 42, 44, 45];
+  for (const tableNumber of notSmall) {
+    assert.equal(isSmallTable(tableNumber), false, `expected ${tableNumber} not to be small`);
+  }
+});
+
+test("isWideTable: only tables 34 and 44 are wide", () => {
+  assert.equal(isWideTable(34), true);
+  assert.equal(isWideTable(44), true);
+  assert.equal(isWideTable(33), false);
+  assert.equal(isWideTable(45), false);
+});
+
+test("small, standard, and wide table lists partition the two dining rows with no overlap", () => {
+  const small = [31, 32, 35, 37, 41, 43, 46, 47];
+  const wide = [34, 44];
+  const standard = [33, 36, 42, 45];
+  const mainA = ZONES.find((z) => z.id === "main-a")?.tableNumbers ?? [];
+  const mainB = ZONES.find((z) => z.id === "main-b")?.tableNumbers ?? [];
+  const allDiningTables = [...mainA, ...mainB];
+
+  assert.deepEqual([...small, ...wide, ...standard].sort((a, b) => a - b), [...allDiningTables].sort((a, b) => a - b));
+  for (const tableNumber of standard) {
+    assert.equal(isSmallTable(tableNumber), false);
+    assert.equal(isWideTable(tableNumber), false);
+  }
 });
