@@ -11,6 +11,9 @@ interface TableCardProps {
    *  circle, a bit bigger than the other booths, instead of the standard
    *  booth frame. */
   round?: boolean;
+  /** Bar Lounge (61-63) — renders a size down from the standard table/booth
+   *  frame. */
+  small?: boolean;
   onSelect: (tableNumber: number) => void;
 }
 
@@ -48,7 +51,11 @@ const SHAPE_FRAME: Record<TableShape, string> = {
 // up from the standard booth, rather than the booths' rounded-top shape.
 const ROUND_FRAME = "h-32 w-32 shrink-0 rounded-full";
 
-export function TableCard({ tableNumber, status, reservation, now, shape, round, onSelect }: TableCardProps) {
+// Bar Lounge's frame — same rounded-rectangle look as a standard table,
+// just a size down.
+const SMALL_FRAME = "h-24 w-24 shrink-0 rounded-lg";
+
+export function TableCard({ tableNumber, status, reservation, now, shape, round, small, onSelect }: TableCardProps) {
   // Only a seated table has a start time to count from — Available/Reserved
   // tables show no counter.
   const seatedMinutes =
@@ -76,7 +83,7 @@ export function TableCard({ tableNumber, status, reservation, now, shape, round,
     );
   }
 
-  const frameClass = round ? ROUND_FRAME : SHAPE_FRAME[shape];
+  const frameClass = round ? ROUND_FRAME : small ? SMALL_FRAME : SHAPE_FRAME[shape];
 
   return (
     <button

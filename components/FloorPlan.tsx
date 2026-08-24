@@ -32,7 +32,7 @@ export function FloorPlan({ reservationsByTable, getStatus, now, onSelectTable }
     <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
       {barLounge && (
         <div className="lg:w-32 lg:shrink-0">
-          <ZoneSection zone={barLounge} stack {...zoneProps} />
+          <ZoneSection zone={barLounge} stack small {...zoneProps} />
         </div>
       )}
       <div className="flex flex-1 flex-col gap-8">
@@ -57,9 +57,11 @@ interface ZoneSectionProps {
    *  instead of packing them to the left — used for Bar, High-Tops, and the
    *  booths, so all three match the row width the dining tables use. */
   distribute?: boolean;
+  /** Render every table in this zone a size down — used for Bar Lounge. */
+  small?: boolean;
 }
 
-function ZoneSection({ zone, reservationsByTable, getStatus, now, onSelectTable, stack, distribute }: ZoneSectionProps) {
+function ZoneSection({ zone, reservationsByTable, getStatus, now, onSelectTable, stack, distribute, small }: ZoneSectionProps) {
   const gapClass = zone.shape === "seat" ? "gap-2" : "gap-3";
   const justifyClass = distribute ? "justify-between" : "";
 
@@ -76,6 +78,7 @@ function ZoneSection({ zone, reservationsByTable, getStatus, now, onSelectTable,
             now={now}
             shape={zone.shape}
             round={isRoundTable(tableNumber)}
+            small={small}
             onSelect={onSelectTable}
           />
         ))}
