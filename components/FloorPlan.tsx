@@ -16,11 +16,11 @@ interface FloorPlanProps {
 // components/TableCard.tsx), so cards line up identically in both columns.
 const BAR_LOUNGE_ZONE_ID = "bar-lounge";
 
-// The booths (51-56, one fewer table than the 41-47 row above them) get
-// spread edge-to-edge across the same row width instead of clustering on
-// the left — same 6 tables, same fixed card size, just distributed to fill
-// the space the 40s row uses.
-const DISTRIBUTE_ZONE_ID = "main-c";
+// These zones spread their tables/seats edge-to-edge across the full row
+// width instead of clustering on the left — same tables, same fixed card
+// size, just distributed to fill the same area every other row in the main
+// column uses.
+const DISTRIBUTE_ZONE_IDS = new Set(["bar", "high-tops", "main-c"]);
 
 export function FloorPlan({ reservationsByTable, getStatus, now, onSelectTable }: FloorPlanProps) {
   const barLounge = ZONES.find((zone) => zone.id === BAR_LOUNGE_ZONE_ID);
@@ -37,7 +37,7 @@ export function FloorPlan({ reservationsByTable, getStatus, now, onSelectTable }
       )}
       <div className="flex flex-1 flex-col gap-8">
         {mainArea.map((zone) => (
-          <ZoneSection key={zone.id} zone={zone} distribute={zone.id === DISTRIBUTE_ZONE_ID} {...zoneProps} />
+          <ZoneSection key={zone.id} zone={zone} distribute={DISTRIBUTE_ZONE_IDS.has(zone.id)} {...zoneProps} />
         ))}
       </div>
     </div>
@@ -53,9 +53,9 @@ interface ZoneSectionProps {
   /** Stack tables in a single vertical column instead of wrapping — used
    *  for Bar Lounge, which the real floor plan shows as a vertical strip. */
   stack?: boolean;
-  /** Spread tables with equal spacing across the full row width instead of
-   *  packing them to the left — used for the booths, which have one fewer
-   *  table than the row above them. */
+  /** Spread tables/seats with equal spacing across the full row width
+   *  instead of packing them to the left — used for Bar, High-Tops, and the
+   *  booths, so all three match the row width the dining tables use. */
   distribute?: boolean;
 }
 
