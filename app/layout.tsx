@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Table Reservations",
-  description: "Manage bar and main dining table reservations.",
+  title: "Elena's Restaurant - West Portal",
+  description: "Manage bar and main dining table reservations for Elena's Restaurant - West Portal.",
 };
 
 export default function RootLayout({

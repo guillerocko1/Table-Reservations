@@ -1,4 +1,4 @@
-# Restaurant Table Reservations
+# Elena's Restaurant - West Portal — Table Reservations
 
 A single-restaurant table reservation dashboard for front-of-house staff.
 Color-coded floor plan — laid out to match the restaurant's actual
