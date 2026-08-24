@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   computeFinalTime,
+  formatTime12Hour,
   minutesSince,
   minutesUntil,
   statusFor,
@@ -35,6 +36,15 @@ test("computeFinalTime adds the time limit to the start time", () => {
   assert.equal(computeFinalTime("18:00", 60), "19:00");
   assert.equal(computeFinalTime("18:30", 90), "20:00");
   assert.equal(computeFinalTime("21:15", 120), "23:15");
+});
+
+test("formatTime12Hour: converts 24-hour HH:mm to 12-hour with AM/PM", () => {
+  assert.equal(formatTime12Hour("00:00"), "12:00 AM");
+  assert.equal(formatTime12Hour("08:05"), "8:05 AM");
+  assert.equal(formatTime12Hour("12:00"), "12:00 PM");
+  assert.equal(formatTime12Hour("13:15"), "1:15 PM");
+  assert.equal(formatTime12Hour("20:00"), "8:00 PM");
+  assert.equal(formatTime12Hour("23:45"), "11:45 PM");
 });
 
 test("statusFor: no reservation is available", () => {
@@ -117,7 +127,7 @@ test("validateReservationInput: rejects zero or fractional party size", () => {
 });
 
 test("validateReservationInput: accepts every documented time limit, rejects anything else", () => {
-  const validLimits = [30, 45, 60, 75, 90, 120, 150] as const;
+  const validLimits = [30, 45, 60, 75, 90, 105, 120, 150] as const;
   for (const timeLimitMinutes of validLimits) {
     const result = validateReservationInput({
       guestName: "Alex",

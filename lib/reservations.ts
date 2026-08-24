@@ -1,5 +1,5 @@
 export type Celebration = "None" | "Birthday" | "Anniversary" | "Engagement" | "Other";
-export type TimeLimitMinutes = 30 | 45 | 60 | 75 | 90 | 120 | 150;
+export type TimeLimitMinutes = 30 | 45 | 60 | 75 | 90 | 105 | 120 | 150;
 export type ReservationStatus = "available" | "reserved" | "occupied" | "overdue";
 
 // A guest can carry any number of these at once (e.g. "VIP" + "Regular"),
@@ -66,7 +66,7 @@ export interface StatusSummary {
   overdue: number;
 }
 
-const VALID_TIME_LIMITS: TimeLimitMinutes[] = [30, 45, 60, 75, 90, 120, 150];
+const VALID_TIME_LIMITS: TimeLimitMinutes[] = [30, 45, 60, 75, 90, 105, 120, 150];
 
 // Times are plain "HH:mm" strings within a single day — a reservation whose
 // window crosses midnight is out of scope for this demo (see spec).
@@ -84,6 +84,17 @@ function minutesToTime(totalMinutes: number): string {
 
 export function computeFinalTime(startTime: string, timeLimitMinutes: TimeLimitMinutes): string {
   return minutesToTime(timeToMinutes(startTime) + timeLimitMinutes);
+}
+
+// Formats a 24-hour "HH:mm" string for display as 12-hour with AM/PM, e.g.
+// "20:00" -> "8:00 PM", "00:00" -> "12:00 AM", "12:30" -> "12:30 PM". Purely
+// a display concern — stored/compared times stay 24-hour "HH:mm" everywhere
+// else in this module.
+export function formatTime12Hour(time: string): string {
+  const [hours, minutes] = time.split(":").map(Number);
+  const period = hours >= 12 ? "PM" : "AM";
+  const displayHours = hours % 12 === 0 ? 12 : hours % 12;
+  return `${displayHours}:${String(minutes).padStart(2, "0")} ${period}`;
 }
 
 // Builds the next Reservation record for a save: form fields always come
@@ -148,7 +159,7 @@ export function validateReservationInput(
     errors.partySize = "Party size must be a whole number of at least 1.";
   }
   if (!VALID_TIME_LIMITS.includes(input.timeLimitMinutes)) {
-    errors.timeLimitMinutes = "Time limit must be 30, 45, 60, 75, 90, 120, or 150 minutes.";
+    errors.timeLimitMinutes = "Time limit must be 30, 45, 60, 75, 90, 105, 120, or 150 minutes.";
   }
   if (!input.reservationTime) {
     errors.reservationTime = "Reservation time is required.";

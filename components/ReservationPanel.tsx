@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   validateReservationInput,
+  formatTime12Hour,
   GUEST_TAGS,
   type Celebration,
   type GuestTag,
@@ -23,13 +24,14 @@ interface ReservationPanelProps {
 }
 
 const CELEBRATIONS: Celebration[] = ["None", "Birthday", "Anniversary", "Engagement", "Other"];
-const TIME_LIMITS: TimeLimitMinutes[] = [30, 45, 60, 75, 90, 120, 150];
+const TIME_LIMITS: TimeLimitMinutes[] = [30, 45, 60, 75, 90, 105, 120, 150];
 const TIME_LIMIT_LABELS: Record<TimeLimitMinutes, string> = {
   30: "30 minutes",
   45: "45 minutes",
   60: "1 hour",
   75: "1 h 15 minutes",
   90: "1 h 30 minutes",
+  105: "1 h 45 minutes",
   120: "2 hours",
   150: "2 h 30 minutes",
 };
@@ -287,7 +289,7 @@ export function ReservationPanel({
           </p>
           {reservation?.finalTime && (
             <p className="mt-1 text-lg font-semibold text-[var(--color-overdue-text)]">
-              Final time: {reservation.finalTime}
+              Final time: {formatTime12Hour(reservation.finalTime)}
             </p>
           )}
 

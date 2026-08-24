@@ -1,4 +1,10 @@
-import { minutesSince, minutesUntil, type Reservation, type ReservationStatus } from "@/lib/reservations";
+import {
+  formatTime12Hour,
+  minutesSince,
+  minutesUntil,
+  type Reservation,
+  type ReservationStatus,
+} from "@/lib/reservations";
 
 interface ReservationDetailsProps {
   tableNumber: number | null;
@@ -66,7 +72,7 @@ export function ReservationDetails({ tableNumber, reservation, status, now, onCl
                 numbers staff scan for fastest to judge how a table's doing. */}
             <Detail
               label="Start time"
-              value={reservation.startTime ?? "Not seated yet"}
+              value={reservation.startTime ? formatTime12Hour(reservation.startTime) : "Not seated yet"}
               valueClassName="text-lg font-semibold text-[var(--color-occupied-text)]"
             />
             <Detail label="Time limit" value={`${reservation.timeLimitMinutes} min`} />
@@ -78,7 +84,11 @@ export function ReservationDetails({ tableNumber, reservation, status, now, onCl
               value={reservation.finalTime ? `${minutesUntil(reservation.finalTime, now)} min` : "Not seated yet"}
               valueClassName={COUNTDOWN_VALUE_CLASS}
             />
-            <Detail label="Final time" value={reservation.finalTime ?? "—"} valueClassName={COUNTDOWN_VALUE_CLASS} />
+            <Detail
+              label="Final time"
+              value={reservation.finalTime ? formatTime12Hour(reservation.finalTime) : "—"}
+              valueClassName={COUNTDOWN_VALUE_CLASS}
+            />
             <Detail
               label="Server name"
               value={reservation.serverName || "Unassigned"}
