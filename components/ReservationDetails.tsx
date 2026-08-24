@@ -63,18 +63,21 @@ export function ReservationDetails({ tableNumber, reservation, status, now, onCl
             <Detail
               label="Start time"
               value={reservation.startTime ?? "Not seated yet"}
-              valueClassName="text-[var(--color-occupied-text)]"
+              valueClassName="text-lg font-semibold text-[var(--color-occupied-text)]"
             />
             <Detail label="Time limit" value={`${reservation.timeLimitMinutes} min`} />
+            {/* Final time gets extra size on top of its color — it's the
+                single most important number for staff to notice at a glance
+                (when a table needs to turn over). */}
             <Detail
               label="Final time"
               value={reservation.finalTime ?? "—"}
-              valueClassName="text-[var(--color-overdue-text)]"
+              valueClassName="text-3xl font-bold text-[var(--color-overdue-text)]"
             />
             <Detail
               label="Server name"
               value={reservation.serverName || "Unassigned"}
-              valueClassName="text-[var(--color-accent)]"
+              valueClassName="text-lg font-semibold text-[var(--color-accent)]"
             />
           </dl>
         ) : (
@@ -85,11 +88,15 @@ export function ReservationDetails({ tableNumber, reservation, status, now, onCl
   );
 }
 
+// valueClassName, when given, fully replaces the default size/weight/color
+// together (not appended alongside it) — callers that need a bigger size
+// (Final time) would otherwise fight the default text-lg for the same
+// text-size utility slot.
 function Detail({ label, value, valueClassName }: { label: string; value: string; valueClassName?: string }) {
   return (
     <div>
       <dt className="text-sm text-[var(--color-text-muted)]">{label}</dt>
-      <dd className={`text-lg font-semibold ${valueClassName ?? "text-[var(--color-text)]"}`}>{value}</dd>
+      <dd className={valueClassName ?? "text-lg font-semibold text-[var(--color-text)]"}>{value}</dd>
     </div>
   );
 }
