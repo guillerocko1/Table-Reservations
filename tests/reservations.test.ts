@@ -7,6 +7,7 @@ import {
   updateReservationFields,
   validateReservationInput,
   summarizeStatuses,
+  GUEST_TAGS,
   type Reservation,
   type ReservationInput,
 } from "../lib/reservations.ts";
@@ -15,6 +16,7 @@ function makeReservation(overrides: Partial<Reservation> = {}): Reservation {
   return {
     tableNumber: 1,
     guestName: "Alex Rivera",
+    tags: [],
     partySize: 2,
     celebration: "None",
     allergies: "",
@@ -59,6 +61,7 @@ test("statusFor: seated and past the final time is overdue", () => {
 test("validateReservationInput: valid input has no errors", () => {
   const result = validateReservationInput({
     guestName: "Alex Rivera",
+    tags: ["VIP"],
     partySize: 4,
     celebration: "Birthday",
     allergies: "peanuts",
@@ -72,6 +75,7 @@ test("validateReservationInput: valid input has no errors", () => {
 test("validateReservationInput: rejects missing guest name", () => {
   const result = validateReservationInput({
     guestName: "   ",
+    tags: [],
     partySize: 2,
     celebration: "None",
     allergies: "",
@@ -85,6 +89,7 @@ test("validateReservationInput: rejects missing guest name", () => {
 test("validateReservationInput: rejects zero or fractional party size", () => {
   const zero = validateReservationInput({
     guestName: "Alex",
+    tags: [],
     partySize: 0,
     celebration: "None",
     allergies: "",
@@ -95,6 +100,7 @@ test("validateReservationInput: rejects zero or fractional party size", () => {
 
   const fractional = validateReservationInput({
     guestName: "Alex",
+    tags: [],
     partySize: 2.5,
     celebration: "None",
     allergies: "",
@@ -107,6 +113,7 @@ test("validateReservationInput: rejects zero or fractional party size", () => {
 function makeInput(overrides: Partial<ReservationInput> = {}): ReservationInput {
   return {
     guestName: "Alex Rivera",
+    tags: [],
     partySize: 2,
     celebration: "None",
     allergies: "",
@@ -146,6 +153,28 @@ test("updateReservationFields: unrelated field edits on a seated table keep star
   assert.equal(result.startTime, "18:00");
   assert.equal(result.finalTime, "19:30");
   assert.equal(result.guestName, "Jordan Lee");
+});
+
+test("updateReservationFields: carries guest tags through from input", () => {
+  const result = updateReservationFields(undefined, 1, makeInput({ tags: ["VIP", "Regular"] }));
+  assert.deepEqual(result.tags, ["VIP", "Regular"]);
+});
+
+test("GUEST_TAGS: contains exactly the twelve documented tags", () => {
+  assert.deepEqual(GUEST_TAGS, [
+    "Alert the Chef",
+    "Alert the Manager",
+    "Bird Dog",
+    "Blogger",
+    "Critic",
+    "Employee",
+    "Friend of Employee",
+    "Friend of Owner",
+    "Insurance Table",
+    "Investor",
+    "Regular",
+    "VIP",
+  ]);
 });
 
 test("minutesSince: counts whole minutes elapsed since start time", () => {

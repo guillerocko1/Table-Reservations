@@ -70,8 +70,8 @@ export function TableCard({ tableNumber, status, reservation, now, shape, round,
 
   const title = reservation
     ? `Table ${tableNumber} · ${STATUS_LABELS[status]} · ${reservation.guestName} · ${reservation.partySize}${
-        seatedMinutes !== null ? ` · seated ${seatedMinutes} min` : ""
-      }`
+        reservation.tags.length > 0 ? ` · ${reservation.tags.join(", ")}` : ""
+      }${seatedMinutes !== null ? ` · seated ${seatedMinutes} min` : ""}`
     : `Table ${tableNumber} · ${STATUS_LABELS[status]}`;
 
   if (shape === "seat") {
@@ -104,6 +104,7 @@ export function TableCard({ tableNumber, status, reservation, now, shape, round,
       <span className="text-[11px] font-medium uppercase tracking-wide">{STATUS_LABELS[status]}</span>
       {reservation && (
         <span className="truncate text-xs">
+          {reservation.tags.length > 0 && "★ "}
           {reservation.guestName} · {reservation.partySize}
         </span>
       )}

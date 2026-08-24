@@ -2,9 +2,41 @@ export type Celebration = "None" | "Birthday" | "Anniversary" | "Engagement" | "
 export type TimeLimitMinutes = 30 | 60 | 90 | 120;
 export type ReservationStatus = "available" | "reserved" | "occupied" | "overdue";
 
+// A guest can carry any number of these at once (e.g. "VIP" + "Regular"),
+// so this is a multi-select, not a single Celebration-style choice.
+export type GuestTag =
+  | "Alert the Chef"
+  | "Alert the Manager"
+  | "Bird Dog"
+  | "Blogger"
+  | "Critic"
+  | "Employee"
+  | "Friend of Employee"
+  | "Friend of Owner"
+  | "Insurance Table"
+  | "Investor"
+  | "Regular"
+  | "VIP";
+
+export const GUEST_TAGS: GuestTag[] = [
+  "Alert the Chef",
+  "Alert the Manager",
+  "Bird Dog",
+  "Blogger",
+  "Critic",
+  "Employee",
+  "Friend of Employee",
+  "Friend of Owner",
+  "Insurance Table",
+  "Investor",
+  "Regular",
+  "VIP",
+];
+
 export interface Reservation {
   tableNumber: number;
   guestName: string;
+  tags: GuestTag[];
   partySize: number;
   celebration: Celebration;
   allergies: string;
@@ -16,6 +48,7 @@ export interface Reservation {
 
 export interface ReservationInput {
   guestName: string;
+  tags: GuestTag[];
   partySize: number;
   celebration: Celebration;
   allergies: string;
@@ -64,6 +97,7 @@ export function updateReservationFields(
   return {
     tableNumber,
     guestName: input.guestName,
+    tags: input.tags,
     partySize: input.partySize,
     celebration: input.celebration,
     allergies: input.allergies,

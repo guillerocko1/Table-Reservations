@@ -12,6 +12,7 @@ function makeReservation(overrides: Partial<Reservation> = {}): Reservation {
   return {
     tableNumber: 1,
     guestName: "Alex Rivera",
+    tags: [],
     partySize: 2,
     celebration: "None",
     allergies: "",

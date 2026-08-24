@@ -46,7 +46,14 @@ export function ReservationDetails({ tableNumber, reservation, status, now, onCl
 
         {reservation ? (
           <dl className="flex flex-col gap-4">
-            <Detail label="Guest name" value={reservation.guestName} />
+            <Detail
+              label="Guest name"
+              value={reservation.tags.length > 0 ? `★ ${reservation.guestName}` : reservation.guestName}
+            />
+            <Detail
+              label="Guest tags"
+              value={reservation.tags.length > 0 ? reservation.tags.join(", ") : "None"}
+            />
             <Detail label="Party size" value={String(reservation.partySize)} />
             <Detail label="Special celebration" value={reservation.celebration} />
             <Detail label="Allergies / notes" value={reservation.allergies || "None noted"} />

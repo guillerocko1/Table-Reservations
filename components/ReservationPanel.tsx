@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import {
   validateReservationInput,
+  GUEST_TAGS,
   type Celebration,
+  type GuestTag,
   type Reservation,
   type ReservationInput,
   type TimeLimitMinutes,
@@ -24,6 +26,7 @@ const TIME_LIMITS: TimeLimitMinutes[] = [30, 60, 90, 120];
 function emptyInput(): ReservationInput {
   return {
     guestName: "",
+    tags: [],
     partySize: 2,
     celebration: "None",
     allergies: "",
@@ -48,6 +51,7 @@ export function ReservationPanel({
     if (reservation) {
       setInput({
         guestName: reservation.guestName,
+        tags: reservation.tags,
         partySize: reservation.partySize,
         celebration: reservation.celebration,
         allergies: reservation.allergies,
@@ -75,6 +79,13 @@ export function ReservationPanel({
     }
   }
 
+  function toggleTag(tag: GuestTag) {
+    setInput((current) => ({
+      ...current,
+      tags: current.tags.includes(tag) ? current.tags.filter((t) => t !== tag) : [...current.tags, tag],
+    }));
+  }
+
   return (
     <div className="fixed inset-0 z-20 flex justify-end bg-black/30" onClick={onClose}>
       <div
@@ -97,6 +108,30 @@ export function ReservationPanel({
           />
           {errors.guestName && <span className="text-xs text-[var(--color-overdue-text)]">{errors.guestName}</span>}
         </label>
+
+        <div className="flex flex-col gap-1.5 text-sm">
+          Guest tags
+          <div className="flex flex-wrap gap-1.5">
+            {GUEST_TAGS.map((tag) => {
+              const active = input.tags.includes(tag);
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => toggleTag(tag)}
+                  aria-pressed={active}
+                  className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
+                    active
+                      ? "border-[var(--color-accent)] bg-[var(--color-accent)] text-white"
+                      : "border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-accent)]"
+                  }`}
+                >
+                  {tag}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         <label className="flex flex-col gap-1 text-sm">
           Party size
