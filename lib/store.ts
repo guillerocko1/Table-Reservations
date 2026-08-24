@@ -40,7 +40,14 @@ export function createReservationStore(store: KeyValueStore): ReservationStore {
     const raw = store.getItem(STORAGE_KEY);
     if (!raw) return {};
     try {
-      return JSON.parse(raw) as Record<number, Reservation>;
+      const parsed = JSON.parse(raw) as Record<number, Reservation>;
+      // Backfill fields added to the schema after some records were already
+      // saved (e.g. `tags`), so data persisted by an older version of this
+      // app doesn't crash code that assumes every field is always present.
+      for (const reservation of Object.values(parsed)) {
+        reservation.tags ??= [];
+      }
+      return parsed;
     } catch {
       return {};
     }

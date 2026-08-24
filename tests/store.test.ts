@@ -46,6 +46,30 @@ test("createReservationStore: getAll on an empty store returns an empty object",
   assert.deepEqual(store.getAll(), {});
 });
 
+test("createReservationStore: backfills tags: [] for records saved before that field existed", () => {
+  // Simulates data written by an older version of this app, before `tags`
+  // was added to the Reservation schema — getAll() must not crash and
+  // must hand back a real array, not undefined.
+  const rawStore = createMemoryStore();
+  const legacyRecord = {
+    tableNumber: 7,
+    guestName: "Alex Rivera",
+    partySize: 2,
+    celebration: "None",
+    allergies: "",
+    reservationTime: "18:00",
+    startTime: null,
+    timeLimitMinutes: 90,
+    finalTime: null,
+    // no `tags` field — this is the point of the test
+  };
+  rawStore.setItem("restaurant-reservations:v1", JSON.stringify({ 7: legacyRecord }));
+
+  const store = createReservationStore(rawStore);
+  const all = store.getAll();
+  assert.deepEqual(all[7].tags, []);
+});
+
 test("isStoreAvailable: true for a working store", () => {
   assert.equal(isStoreAvailable(createMemoryStore()), true);
 });
