@@ -15,6 +15,10 @@ const STATUS_LABELS: Record<ReservationStatus, string> = {
   overdue: "Overdue",
 };
 
+// Shared by Minutes left and Final time — the two numbers staff need to
+// notice fastest when checking whether a table's about to turn over.
+const COUNTDOWN_VALUE_CLASS = "text-3xl font-bold text-[var(--color-overdue-text)]";
+
 // Read-only counterpart to ReservationPanel — same layout conventions, but
 // plain text throughout: no inputs, no Save/Seat/Clear actions. This is the
 // only thing the staff view lets someone open.
@@ -66,19 +70,15 @@ export function ReservationDetails({ tableNumber, reservation, status, now, onCl
               valueClassName="text-lg font-semibold text-[var(--color-occupied-text)]"
             />
             <Detail label="Time limit" value={`${reservation.timeLimitMinutes} min`} />
+            {/* Minutes left and Final time share the same large, bold,
+                overdue-colored treatment — they're the two numbers staff
+                notice fastest when checking a table. */}
             <Detail
               label="Minutes left"
               value={reservation.finalTime ? `${minutesUntil(reservation.finalTime, now)} min` : "Not seated yet"}
-              valueClassName="text-lg font-semibold text-[var(--color-occupied-text)]"
+              valueClassName={COUNTDOWN_VALUE_CLASS}
             />
-            {/* Final time gets extra size on top of its color — it's the
-                single most important number for staff to notice at a glance
-                (when a table needs to turn over). */}
-            <Detail
-              label="Final time"
-              value={reservation.finalTime ?? "—"}
-              valueClassName="text-3xl font-bold text-[var(--color-overdue-text)]"
-            />
+            <Detail label="Final time" value={reservation.finalTime ?? "—"} valueClassName={COUNTDOWN_VALUE_CLASS} />
             <Detail
               label="Server name"
               value={reservation.serverName || "Unassigned"}
