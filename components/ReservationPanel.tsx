@@ -201,6 +201,16 @@ export function ReservationPanel({
           </select>
         </label>
 
+        <label className="flex flex-col gap-1 text-sm">
+          Server name
+          <input
+            className="rounded-md border border-[var(--color-border)] px-3 py-2 text-lg font-semibold text-[var(--color-accent)]"
+            value={input.serverName}
+            onChange={(event) => setInput({ ...input, serverName: event.target.value })}
+            placeholder="Who's serving this table?"
+          />
+        </label>
+
         <button
           type="button"
           onClick={handleSave}
@@ -227,16 +237,6 @@ export function ReservationPanel({
               Final time: {reservation.finalTime}
             </p>
           )}
-
-          <label className="mt-3 flex flex-col gap-1 text-sm">
-            Server name
-            <input
-              className="rounded-md border border-[var(--color-border)] px-3 py-2 text-lg font-semibold text-[var(--color-accent)]"
-              value={input.serverName}
-              onChange={(event) => setInput({ ...input, serverName: event.target.value })}
-              placeholder="Who's serving this table?"
-            />
-          </label>
 
           <button
             type="button"
