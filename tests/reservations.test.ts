@@ -116,6 +116,37 @@ test("validateReservationInput: rejects zero or fractional party size", () => {
   assert.equal(fractional.valid, false);
 });
 
+test("validateReservationInput: accepts every documented time limit, rejects anything else", () => {
+  const validLimits = [30, 45, 60, 75, 90, 120, 150] as const;
+  for (const timeLimitMinutes of validLimits) {
+    const result = validateReservationInput({
+      guestName: "Alex",
+      tags: [],
+      partySize: 2,
+      celebration: "None",
+      allergies: "",
+      reservationTime: "18:00",
+      timeLimitMinutes,
+      serverName: "",
+    });
+    assert.equal(result.valid, true, `expected ${timeLimitMinutes} to be a valid time limit`);
+  }
+
+  const result = validateReservationInput({
+    guestName: "Alex",
+    tags: [],
+    partySize: 2,
+    celebration: "None",
+    allergies: "",
+    reservationTime: "18:00",
+    // @ts-expect-error — deliberately not one of the documented options
+    timeLimitMinutes: 100,
+    serverName: "",
+  });
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.timeLimitMinutes);
+});
+
 function makeInput(overrides: Partial<ReservationInput> = {}): ReservationInput {
   return {
     guestName: "Alex Rivera",

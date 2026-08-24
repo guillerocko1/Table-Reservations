@@ -23,7 +23,16 @@ interface ReservationPanelProps {
 }
 
 const CELEBRATIONS: Celebration[] = ["None", "Birthday", "Anniversary", "Engagement", "Other"];
-const TIME_LIMITS: TimeLimitMinutes[] = [30, 60, 90, 120];
+const TIME_LIMITS: TimeLimitMinutes[] = [30, 45, 60, 75, 90, 120, 150];
+const TIME_LIMIT_LABELS: Record<TimeLimitMinutes, string> = {
+  30: "30 minutes",
+  45: "45 minutes",
+  60: "1 hour",
+  75: "1 h 15 minutes",
+  90: "1 h 30 minutes",
+  120: "2 hours",
+  150: "2 h 30 minutes",
+};
 
 function emptyInput(): ReservationInput {
   return {
@@ -200,7 +209,7 @@ export function ReservationPanel({
           >
             {TIME_LIMITS.map((minutes) => (
               <option key={minutes} value={minutes}>
-                {minutes} min
+                {TIME_LIMIT_LABELS[minutes]}
               </option>
             ))}
           </select>
