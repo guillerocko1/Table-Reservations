@@ -14,6 +14,8 @@ import {
 interface ReservationPanelProps {
   tableNumber: number | null;
   reservation: Reservation | undefined;
+  serverNames: string[];
+  onSetServerName: (index: number, name: string) => void;
   onSave: (tableNumber: number, input: ReservationInput) => void;
   onSeat: (tableNumber: number, startTime: string) => void;
   onClear: (tableNumber: number) => void;
@@ -39,6 +41,8 @@ function emptyInput(): ReservationInput {
 export function ReservationPanel({
   tableNumber,
   reservation,
+  serverNames,
+  onSetServerName,
   onSave,
   onSeat,
   onClear,
@@ -47,6 +51,7 @@ export function ReservationPanel({
   const [input, setInput] = useState<ReservationInput>(emptyInput);
   const [startTime, setStartTime] = useState("18:00");
   const [errors, setErrors] = useState<ReturnType<typeof validateReservationInput>["errors"]>({});
+  const [editingServerList, setEditingServerList] = useState(false);
 
   useEffect(() => {
     if (reservation) {
@@ -201,15 +206,54 @@ export function ReservationPanel({
           </select>
         </label>
 
-        <label className="flex flex-col gap-1 text-sm">
-          Server name
-          <input
-            className="rounded-md border border-[var(--color-border)] px-3 py-2 text-lg font-semibold text-[var(--color-accent)]"
-            value={input.serverName}
-            onChange={(event) => setInput({ ...input, serverName: event.target.value })}
-            placeholder="Who's serving this table?"
-          />
-        </label>
+        <div className="flex flex-col gap-1.5 text-sm">
+          <div className="flex items-center justify-between">
+            <span>Server name</span>
+            <button
+              type="button"
+              onClick={() => setEditingServerList((current) => !current)}
+              className="text-xs font-medium text-[var(--color-accent)] underline"
+            >
+              {editingServerList ? "Done" : "Edit server list"}
+            </button>
+          </div>
+
+          {editingServerList ? (
+            <div className="flex flex-col gap-1.5 rounded-md border border-[var(--color-border)] p-2">
+              {serverNames.map((name, index) => (
+                <input
+                  key={index}
+                  className="rounded-md border border-[var(--color-border)] px-2 py-1 text-sm"
+                  value={name}
+                  placeholder={`Server ${index + 1}`}
+                  onChange={(event) => onSetServerName(index, event.target.value)}
+                />
+              ))}
+            </div>
+          ) : (
+            <select
+              className="rounded-md border border-[var(--color-border)] px-3 py-2 text-lg font-semibold text-[var(--color-accent)]"
+              value={input.serverName}
+              onChange={(event) => setInput({ ...input, serverName: event.target.value })}
+            >
+              <option value="">Unassigned</option>
+              {/* Keeps a reservation's existing server visible even if it was
+                  typed before the roster existed, or no longer matches a
+                  current slot (e.g. the slot was renamed). */}
+              {input.serverName && !serverNames.includes(input.serverName) && (
+                <option value={input.serverName}>{input.serverName} (custom)</option>
+              )}
+              {serverNames.map(
+                (name, index) =>
+                  name.trim() !== "" && (
+                    <option key={index} value={name}>
+                      {name}
+                    </option>
+                  ),
+              )}
+            </select>
+          )}
+        </div>
 
         <button
           type="button"

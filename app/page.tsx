@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useReservations } from "@/lib/useReservations";
+import { useServerRoster } from "@/lib/useServerRoster";
 import { StatusSummary } from "@/components/StatusSummary";
 import { FloorPlan } from "@/components/FloorPlan";
 import { ReservationPanel } from "@/components/ReservationPanel";
@@ -10,6 +11,7 @@ import { ReservationPanel } from "@/components/ReservationPanel";
 export default function Home() {
   const { reservationsByTable, isPersistent, getStatus, summary, now, saveReservation, seatTable, clearTable } =
     useReservations();
+  const { serverNames, setServerName } = useServerRoster();
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
 
   return (
@@ -45,6 +47,8 @@ export default function Home() {
       <ReservationPanel
         tableNumber={selectedTable}
         reservation={selectedTable !== null ? reservationsByTable[selectedTable] : undefined}
+        serverNames={serverNames}
+        onSetServerName={setServerName}
         onSave={(tableNumber, input) => saveReservation(tableNumber, input)}
         onSeat={(tableNumber, startTime) => seatTable(tableNumber, startTime)}
         onClear={(tableNumber) => {
