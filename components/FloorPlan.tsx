@@ -22,6 +22,11 @@ const BAR_LOUNGE_ZONE_ID = "bar-lounge";
 // column uses.
 const DISTRIBUTE_ZONE_IDS = new Set(["bar", "high-tops", "main-c"]);
 
+// These zones render a size down from the standard frame — Bar Lounge to
+// look a little more tucked into its narrow column, and Bar because 16
+// seats need to be smaller than High-Tops' 9 to still fit the same width.
+const SMALL_ZONE_IDS = new Set(["bar-lounge", "bar"]);
+
 export function FloorPlan({ reservationsByTable, getStatus, now, onSelectTable }: FloorPlanProps) {
   const barLounge = ZONES.find((zone) => zone.id === BAR_LOUNGE_ZONE_ID);
   const mainArea = ZONES.filter((zone) => zone.id !== BAR_LOUNGE_ZONE_ID);
@@ -37,7 +42,13 @@ export function FloorPlan({ reservationsByTable, getStatus, now, onSelectTable }
       )}
       <div className="flex flex-1 flex-col gap-8">
         {mainArea.map((zone) => (
-          <ZoneSection key={zone.id} zone={zone} distribute={DISTRIBUTE_ZONE_IDS.has(zone.id)} {...zoneProps} />
+          <ZoneSection
+            key={zone.id}
+            zone={zone}
+            distribute={DISTRIBUTE_ZONE_IDS.has(zone.id)}
+            small={SMALL_ZONE_IDS.has(zone.id)}
+            {...zoneProps}
+          />
         ))}
       </div>
     </div>

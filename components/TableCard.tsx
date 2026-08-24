@@ -11,8 +11,9 @@ interface TableCardProps {
    *  circle, a bit bigger than the other booths, instead of the standard
    *  booth frame. */
   round?: boolean;
-  /** Bar Lounge (61-63) — renders a size down from the standard table/booth
-   *  frame. */
+  /** Bar Lounge (61-63) renders a size down from the standard table/booth
+   *  frame; Bar (1-16) renders a size down from the standard seat frame —
+   *  16 seats need to be smaller than High-Tops' 9 to fit the same width. */
   small?: boolean;
   onSelect: (tableNumber: number) => void;
 }
@@ -55,6 +56,10 @@ const ROUND_FRAME = "h-32 w-32 shrink-0 rounded-full";
 // just a size down.
 const SMALL_FRAME = "h-24 w-24 shrink-0 rounded-lg";
 
+// Bar's frame — same circle as a standard seat, just a size down so all 16
+// fit, edge to edge, across the same width High-Tops' 9 seats use.
+const SMALL_SEAT_FRAME = "h-10 w-10 shrink-0 rounded-full";
+
 export function TableCard({ tableNumber, status, reservation, now, shape, round, small, onSelect }: TableCardProps) {
   // Only a seated table has a start time to count from — Available/Reserved
   // tables show no counter.
@@ -70,15 +75,19 @@ export function TableCard({ tableNumber, status, reservation, now, shape, round,
     : `Table ${tableNumber} · ${STATUS_LABELS[status]}`;
 
   if (shape === "seat") {
+    const seatFrame = small ? SMALL_SEAT_FRAME : SHAPE_FRAME.seat;
+
     return (
       <button
         type="button"
         onClick={() => onSelect(tableNumber)}
         title={title}
-        className={`flex flex-col items-center justify-center gap-0.5 border-2 text-center transition hover:brightness-95 ${SHAPE_FRAME.seat} ${STATUS_STYLES[status]}`}
+        className={`flex flex-col items-center justify-center gap-0.5 border-2 text-center transition hover:brightness-95 ${seatFrame} ${STATUS_STYLES[status]}`}
       >
-        <span className="font-serif text-sm font-bold">{tableNumber}</span>
-        {seatedMinutes !== null && <span className="text-[9px] font-semibold">{seatedMinutes}m</span>}
+        <span className={`font-serif font-bold ${small ? "text-[10px]" : "text-sm"}`}>{tableNumber}</span>
+        {/* A 40px circle can't fit a second line legibly — full details
+            (including seated minutes) are still one click or hover away. */}
+        {!small && seatedMinutes !== null && <span className="text-[9px] font-semibold">{seatedMinutes}m</span>}
       </button>
     );
   }
