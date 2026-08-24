@@ -24,6 +24,7 @@ function makeReservation(overrides: Partial<Reservation> = {}): Reservation {
     startTime: null,
     timeLimitMinutes: 90,
     finalTime: null,
+    serverName: "",
     ...overrides,
   };
 }
@@ -67,6 +68,7 @@ test("validateReservationInput: valid input has no errors", () => {
     allergies: "peanuts",
     reservationTime: "18:00",
     timeLimitMinutes: 90,
+    serverName: "Jamie",
   });
   assert.equal(result.valid, true);
   assert.deepEqual(result.errors, {});
@@ -81,6 +83,7 @@ test("validateReservationInput: rejects missing guest name", () => {
     allergies: "",
     reservationTime: "18:00",
     timeLimitMinutes: 60,
+    serverName: "",
   });
   assert.equal(result.valid, false);
   assert.ok(result.errors.guestName);
@@ -95,6 +98,7 @@ test("validateReservationInput: rejects zero or fractional party size", () => {
     allergies: "",
     reservationTime: "18:00",
     timeLimitMinutes: 60,
+    serverName: "",
   });
   assert.equal(zero.valid, false);
 
@@ -106,6 +110,7 @@ test("validateReservationInput: rejects zero or fractional party size", () => {
     allergies: "",
     reservationTime: "18:00",
     timeLimitMinutes: 60,
+    serverName: "",
   });
   assert.equal(fractional.valid, false);
 });
@@ -119,6 +124,7 @@ function makeInput(overrides: Partial<ReservationInput> = {}): ReservationInput 
     allergies: "",
     reservationTime: "18:00",
     timeLimitMinutes: 90,
+    serverName: "",
     ...overrides,
   };
 }
@@ -158,6 +164,11 @@ test("updateReservationFields: unrelated field edits on a seated table keep star
 test("updateReservationFields: carries guest tags through from input", () => {
   const result = updateReservationFields(undefined, 1, makeInput({ tags: ["VIP", "Regular"] }));
   assert.deepEqual(result.tags, ["VIP", "Regular"]);
+});
+
+test("updateReservationFields: carries server name through from input", () => {
+  const result = updateReservationFields(undefined, 1, makeInput({ serverName: "Jordan" }));
+  assert.equal(result.serverName, "Jordan");
 });
 
 test("GUEST_TAGS: contains exactly the twelve documented tags", () => {

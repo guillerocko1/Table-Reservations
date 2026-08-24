@@ -44,6 +44,8 @@ export interface Reservation {
   startTime: string | null;
   timeLimitMinutes: TimeLimitMinutes;
   finalTime: string | null;
+  /** The staff member serving this table — free text, optional. */
+  serverName: string;
 }
 
 export interface ReservationInput {
@@ -54,6 +56,7 @@ export interface ReservationInput {
   allergies: string;
   reservationTime: string;
   timeLimitMinutes: TimeLimitMinutes;
+  serverName: string;
 }
 
 export interface StatusSummary {
@@ -105,6 +108,7 @@ export function updateReservationFields(
     timeLimitMinutes: input.timeLimitMinutes,
     startTime,
     finalTime: startTime ? computeFinalTime(startTime, input.timeLimitMinutes) : null,
+    serverName: input.serverName,
   };
 }
 

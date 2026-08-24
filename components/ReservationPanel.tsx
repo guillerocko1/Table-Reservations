@@ -32,6 +32,7 @@ function emptyInput(): ReservationInput {
     allergies: "",
     reservationTime: "18:00",
     timeLimitMinutes: 90,
+    serverName: "",
   };
 }
 
@@ -57,6 +58,7 @@ export function ReservationPanel({
         allergies: reservation.allergies,
         reservationTime: reservation.reservationTime,
         timeLimitMinutes: reservation.timeLimitMinutes,
+        serverName: reservation.serverName,
       });
       // "Seat now" should default to right now, not the booked reservation
       // time — only fall back to the booked time once it's actually seated.
@@ -225,6 +227,17 @@ export function ReservationPanel({
               Final time: {reservation.finalTime}
             </p>
           )}
+
+          <label className="mt-3 flex flex-col gap-1 text-sm">
+            Server name
+            <input
+              className="rounded-md border border-[var(--color-border)] px-3 py-2 text-lg font-semibold text-[var(--color-accent)]"
+              value={input.serverName}
+              onChange={(event) => setInput({ ...input, serverName: event.target.value })}
+              placeholder="Who's serving this table?"
+            />
+          </label>
+
           <button
             type="button"
             disabled={!reservation}

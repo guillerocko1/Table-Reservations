@@ -71,6 +71,11 @@ export function ReservationDetails({ tableNumber, reservation, status, now, onCl
               value={reservation.finalTime ?? "—"}
               valueClassName="text-[var(--color-overdue-text)]"
             />
+            <Detail
+              label="Server name"
+              value={reservation.serverName || "Unassigned"}
+              valueClassName="text-[var(--color-accent)]"
+            />
           </dl>
         ) : (
           <p className="text-base text-[var(--color-text-muted)]">This table is available — no reservation.</p>
