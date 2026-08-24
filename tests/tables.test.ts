@@ -1,6 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ZONES, ALL_TABLE_NUMBERS, isRoundTable, isSmallTable, isWideTable } from "../lib/tables.ts";
+import {
+  ZONES,
+  ALL_TABLE_NUMBERS,
+  isRoundTable,
+  isSmallTable,
+  isWideTable,
+  isMediumWideTable,
+} from "../lib/tables.ts";
 
 test("bar-lounge zone covers tables 61 to 63, displayed top to bottom as 63, 62, 61", () => {
   const barLounge = ZONES.find((zone) => zone.id === "bar-lounge");
@@ -72,17 +79,35 @@ test("isWideTable: only tables 34 and 44 are wide", () => {
   assert.equal(isWideTable(45), false);
 });
 
-test("small, standard, and wide table lists partition the two dining rows with no overlap", () => {
+test("isMediumWideTable: only tables 33, 36, 42, and 45 are medium-wide", () => {
+  const mediumWide = [33, 36, 42, 45];
+  for (const tableNumber of mediumWide) {
+    assert.equal(isMediumWideTable(tableNumber), true, `expected ${tableNumber} to be medium-wide`);
+  }
+  const notMediumWide = [31, 32, 34, 35, 37, 41, 43, 44, 46, 47];
+  for (const tableNumber of notMediumWide) {
+    assert.equal(isMediumWideTable(tableNumber), false, `expected ${tableNumber} not to be medium-wide`);
+  }
+});
+
+test("small, medium-wide, and wide table lists partition the two dining rows with no overlap", () => {
   const small = [31, 32, 35, 37, 41, 43, 46, 47];
   const wide = [34, 44];
-  const standard = [33, 36, 42, 45];
+  const mediumWide = [33, 36, 42, 45];
   const mainA = ZONES.find((z) => z.id === "main-a")?.tableNumbers ?? [];
   const mainB = ZONES.find((z) => z.id === "main-b")?.tableNumbers ?? [];
   const allDiningTables = [...mainA, ...mainB];
 
-  assert.deepEqual([...small, ...wide, ...standard].sort((a, b) => a - b), [...allDiningTables].sort((a, b) => a - b));
-  for (const tableNumber of standard) {
+  assert.deepEqual(
+    [...small, ...wide, ...mediumWide].sort((a, b) => a - b),
+    [...allDiningTables].sort((a, b) => a - b),
+  );
+  for (const tableNumber of mediumWide) {
     assert.equal(isSmallTable(tableNumber), false);
+    assert.equal(isWideTable(tableNumber), false);
+  }
+  for (const tableNumber of small) {
+    assert.equal(isMediumWideTable(tableNumber), false);
     assert.equal(isWideTable(tableNumber), false);
   }
 });

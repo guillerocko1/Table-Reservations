@@ -13,10 +13,16 @@ interface TableCardProps {
   round?: boolean;
   /** Bar Lounge (61-63) renders a size down from the standard table/booth
    *  frame; Bar (1-16) renders a size down from the standard seat frame —
-   *  16 seats need to be smaller than High-Tops' 9 to fit the same width;
-   *  and the eight 2-top dining tables (31/32/35/37/41/43/46/47) render a
-   *  size down too. */
+   *  16 seats need to be smaller than High-Tops' 9 to fit the same width. */
   small?: boolean;
+  /** The eight 2-top dining tables (31/32/35/37/41/43/46/47) — same height
+   *  as a standard table, narrower width. Distinct from `small` above,
+   *  which also shrinks height (fine for Bar Lounge, wrong for a dining
+   *  row where every table shares the same row height). */
+  twoTop?: boolean;
+  /** Tables 33, 36, 42, 45 — a little wider than the standard table frame,
+   *  short of the `wide` tables below. */
+  mediumWide?: boolean;
   /** Tables 34 and 44 — wider than the standard table frame (same height,
    *  more width), for tables that seat more people. */
   wide?: boolean;
@@ -68,6 +74,14 @@ const SMALL_SEAT_FRAME = "h-10 w-10 shrink-0 rounded-full";
 // Tables 34/44's frame — same height as a standard table, noticeably wider.
 const WIDE_FRAME = "h-28 w-44 shrink-0 rounded-lg";
 
+// The eight 2-top dining tables' frame — same height as a standard table
+// (they share a row with the others), narrower width.
+const TWO_TOP_FRAME = "h-28 w-24 shrink-0 rounded-lg";
+
+// Tables 33/36/42/45's frame — same height as a standard table, a little
+// wider (between a 2-top and the `wide` tables).
+const MEDIUM_WIDE_FRAME = "h-28 w-36 shrink-0 rounded-lg";
+
 export function TableCard({
   tableNumber,
   status,
@@ -76,6 +90,8 @@ export function TableCard({
   shape,
   round,
   small,
+  twoTop,
+  mediumWide,
   wide,
   onSelect,
 }: TableCardProps) {
@@ -110,7 +126,17 @@ export function TableCard({
     );
   }
 
-  const frameClass = round ? ROUND_FRAME : wide ? WIDE_FRAME : small ? SMALL_FRAME : SHAPE_FRAME[shape];
+  const frameClass = round
+    ? ROUND_FRAME
+    : wide
+      ? WIDE_FRAME
+      : mediumWide
+        ? MEDIUM_WIDE_FRAME
+        : twoTop
+          ? TWO_TOP_FRAME
+          : small
+            ? SMALL_FRAME
+            : SHAPE_FRAME[shape];
 
   return (
     <button

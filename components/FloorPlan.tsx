@@ -1,4 +1,4 @@
-import { ZONES, isRoundTable, isSmallTable, isWideTable, type Zone } from "@/lib/tables";
+import { ZONES, isRoundTable, isSmallTable, isMediumWideTable, isWideTable, type Zone } from "@/lib/tables";
 import type { Reservation, ReservationStatus } from "@/lib/reservations";
 import { TableCard } from "./TableCard";
 
@@ -20,11 +20,13 @@ const BAR_LOUNGE_ZONE_ID = "bar-lounge";
 // width instead of clustering on the left — same tables, same fixed card
 // size, just distributed to fill the same area every other row in the main
 // column uses.
-const DISTRIBUTE_ZONE_IDS = new Set(["bar", "high-tops", "main-c"]);
+const DISTRIBUTE_ZONE_IDS = new Set(["bar", "high-tops", "main-a", "main-b", "main-c"]);
 
 // These zones render a size down from the standard frame — Bar Lounge to
 // look a little more tucked into its narrow column, and Bar because 16
 // seats need to be smaller than High-Tops' 9 to still fit the same width.
+// (The dining rows' 2-top tables get a narrower — not shorter — frame via
+// isSmallTable/twoTop below, not this zone-wide flag.)
 const SMALL_ZONE_IDS = new Set(["bar-lounge", "bar"]);
 
 export function FloorPlan({ reservationsByTable, getStatus, now, onSelectTable }: FloorPlanProps) {
@@ -69,8 +71,8 @@ interface ZoneSectionProps {
    *  booths, so all three match the row width the dining tables use. */
   distribute?: boolean;
   /** Render every table in this zone a size down — used for Bar Lounge and
-   *  Bar; individual 2-top dining tables get this treatment per-table
-   *  instead (see isSmallTable below), regardless of this flag. */
+   *  Bar. The dining rows' 2-top tables use twoTop instead (below), which
+   *  keeps the standard row height. */
   small?: boolean;
 }
 
@@ -91,7 +93,9 @@ function ZoneSection({ zone, reservationsByTable, getStatus, now, onSelectTable,
             now={now}
             shape={zone.shape}
             round={isRoundTable(tableNumber)}
-            small={small || isSmallTable(tableNumber)}
+            small={small}
+            twoTop={isSmallTable(tableNumber)}
+            mediumWide={isMediumWideTable(tableNumber)}
             wide={isWideTable(tableNumber)}
             onSelect={onSelectTable}
           />

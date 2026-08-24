@@ -57,3 +57,11 @@ const WIDE_TABLE_NUMBERS = new Set([34, 44]);
 export function isWideTable(tableNumber: number): boolean {
   return WIDE_TABLE_NUMBERS.has(tableNumber);
 }
+
+// These main dining tables render a little wider than the standard table
+// frame — more than a 2-top, less than the wide tables above.
+const MEDIUM_WIDE_TABLE_NUMBERS = new Set([33, 36, 42, 45]);
+
+export function isMediumWideTable(tableNumber: number): boolean {
+  return MEDIUM_WIDE_TABLE_NUMBERS.has(tableNumber);
+}
