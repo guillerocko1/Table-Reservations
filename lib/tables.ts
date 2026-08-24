@@ -35,3 +35,9 @@ export const ZONES: Zone[] = [
 ];
 
 export const ALL_TABLE_NUMBERS: number[] = ZONES.flatMap((zone) => zone.tableNumbers);
+
+// Table 56 is drawn as a large round booth in the real floor plan — a
+// circle, distinct from the other booths' rounded-rectangle shape.
+export function isRoundTable(tableNumber: number): boolean {
+  return tableNumber === 56;
+}

@@ -7,6 +7,10 @@ interface TableCardProps {
   reservation: Reservation | undefined;
   now: Date;
   shape: TableShape;
+  /** Table 56 — the large round booth in the real floor plan. Renders as a
+   *  circle, a bit bigger than the other booths, instead of the standard
+   *  booth frame. */
+  round?: boolean;
   onSelect: (tableNumber: number) => void;
 }
 
@@ -40,7 +44,11 @@ const SHAPE_FRAME: Record<TableShape, string> = {
   booth: "h-28 w-28 shrink-0 rounded-t-[999px] rounded-b-lg",
 };
 
-export function TableCard({ tableNumber, status, reservation, now, shape, onSelect }: TableCardProps) {
+// Table 56's frame overrides SHAPE_FRAME entirely — a full circle, one size
+// up from the standard booth, rather than the booths' rounded-top shape.
+const ROUND_FRAME = "h-32 w-32 shrink-0 rounded-full";
+
+export function TableCard({ tableNumber, status, reservation, now, shape, round, onSelect }: TableCardProps) {
   // Only a seated table has a start time to count from — Available/Reserved
   // tables show no counter.
   const seatedMinutes =
@@ -68,11 +76,13 @@ export function TableCard({ tableNumber, status, reservation, now, shape, onSele
     );
   }
 
+  const frameClass = round ? ROUND_FRAME : SHAPE_FRAME[shape];
+
   return (
     <button
       type="button"
       onClick={() => onSelect(tableNumber)}
-      className={`flex flex-col items-center justify-center gap-1 border-2 p-2 text-center transition hover:brightness-95 ${SHAPE_FRAME[shape]} ${STATUS_STYLES[status]}`}
+      className={`flex flex-col items-center justify-center gap-1 border-2 p-2 text-center transition hover:brightness-95 ${frameClass} ${STATUS_STYLES[status]}`}
     >
       <span className="font-serif text-xl font-bold">{tableNumber}</span>
       <span className="text-[11px] font-medium uppercase tracking-wide">{STATUS_LABELS[status]}</span>

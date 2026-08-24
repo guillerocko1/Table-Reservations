@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ZONES, ALL_TABLE_NUMBERS } from "../lib/tables.ts";
+import { ZONES, ALL_TABLE_NUMBERS, isRoundTable } from "../lib/tables.ts";
 
 test("bar-lounge zone covers tables 61 to 63, displayed top to bottom as 63, 62, 61", () => {
   const barLounge = ZONES.find((zone) => zone.id === "bar-lounge");
@@ -46,4 +46,10 @@ test("bar and high-tops zones render as individual seats, dining zones as tables
 test("all table numbers are unique across zones and total 48", () => {
   assert.equal(ALL_TABLE_NUMBERS.length, 48);
   assert.equal(new Set(ALL_TABLE_NUMBERS).size, ALL_TABLE_NUMBERS.length);
+});
+
+test("isRoundTable: only table 56 is the round booth", () => {
+  assert.equal(isRoundTable(56), true);
+  assert.equal(isRoundTable(55), false);
+  assert.equal(isRoundTable(51), false);
 });
