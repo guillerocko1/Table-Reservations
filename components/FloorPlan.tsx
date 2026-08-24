@@ -16,6 +16,12 @@ interface FloorPlanProps {
 // components/TableCard.tsx), so cards line up identically in both columns.
 const BAR_LOUNGE_ZONE_ID = "bar-lounge";
 
+// The booths (51-56, one fewer table than the 41-47 row above them) get
+// spread edge-to-edge across the same row width instead of clustering on
+// the left — same 6 tables, same fixed card size, just distributed to fill
+// the space the 40s row uses.
+const DISTRIBUTE_ZONE_ID = "main-c";
+
 export function FloorPlan({ reservationsByTable, getStatus, now, onSelectTable }: FloorPlanProps) {
   const barLounge = ZONES.find((zone) => zone.id === BAR_LOUNGE_ZONE_ID);
   const mainArea = ZONES.filter((zone) => zone.id !== BAR_LOUNGE_ZONE_ID);
@@ -31,7 +37,7 @@ export function FloorPlan({ reservationsByTable, getStatus, now, onSelectTable }
       )}
       <div className="flex flex-1 flex-col gap-8">
         {mainArea.map((zone) => (
-          <ZoneSection key={zone.id} zone={zone} {...zoneProps} />
+          <ZoneSection key={zone.id} zone={zone} distribute={zone.id === DISTRIBUTE_ZONE_ID} {...zoneProps} />
         ))}
       </div>
     </div>
@@ -47,15 +53,20 @@ interface ZoneSectionProps {
   /** Stack tables in a single vertical column instead of wrapping — used
    *  for Bar Lounge, which the real floor plan shows as a vertical strip. */
   stack?: boolean;
+  /** Spread tables with equal spacing across the full row width instead of
+   *  packing them to the left — used for the booths, which have one fewer
+   *  table than the row above them. */
+  distribute?: boolean;
 }
 
-function ZoneSection({ zone, reservationsByTable, getStatus, now, onSelectTable, stack }: ZoneSectionProps) {
+function ZoneSection({ zone, reservationsByTable, getStatus, now, onSelectTable, stack, distribute }: ZoneSectionProps) {
   const gapClass = zone.shape === "seat" ? "gap-2" : "gap-3";
+  const justifyClass = distribute ? "justify-between" : "";
 
   return (
     <section>
       <h2 className="mb-3 font-serif text-lg font-semibold text-[var(--color-text)]">{zone.label}</h2>
-      <div className={`flex ${stack ? "flex-col" : "flex-wrap"} ${gapClass}`}>
+      <div className={`flex ${stack ? "flex-col" : "flex-wrap"} ${justifyClass} ${gapClass}`}>
         {zone.tableNumbers.map((tableNumber) => (
           <TableCard
             key={tableNumber}
