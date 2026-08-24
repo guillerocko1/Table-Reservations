@@ -120,6 +120,14 @@ export function minutesSince(startTime: string, now: Date): number {
   return Math.max(0, nowMinutes - timeToMinutes(startTime));
 }
 
+// Whole minutes remaining before a table's final time. Same-day-only
+// limitation as the rest of this module; clamps to 0 once the final time
+// has passed (an overdue table shows 0 minutes left, not a negative count).
+export function minutesUntil(finalTime: string, now: Date): number {
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  return Math.max(0, timeToMinutes(finalTime) - nowMinutes);
+}
+
 export function statusFor(reservation: Reservation | undefined, now: Date): ReservationStatus {
   if (!reservation) return "available";
   if (!reservation.startTime || !reservation.finalTime) return "reserved";

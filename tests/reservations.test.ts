@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   computeFinalTime,
   minutesSince,
+  minutesUntil,
   statusFor,
   updateReservationFields,
   validateReservationInput,
@@ -198,6 +199,24 @@ test("minutesSince: zero right at the start time", () => {
   const now = new Date();
   now.setHours(18, 0, 0, 0);
   assert.equal(minutesSince("18:00", now), 0);
+});
+
+test("minutesUntil: counts whole minutes remaining before the final time", () => {
+  const now = new Date();
+  now.setHours(19, 15, 0, 0);
+  assert.equal(minutesUntil("20:00", now), 45);
+});
+
+test("minutesUntil: zero right at the final time", () => {
+  const now = new Date();
+  now.setHours(20, 0, 0, 0);
+  assert.equal(minutesUntil("20:00", now), 0);
+});
+
+test("minutesUntil: clamps to zero once the final time has passed (overdue)", () => {
+  const now = new Date();
+  now.setHours(20, 30, 0, 0);
+  assert.equal(minutesUntil("20:00", now), 0);
 });
 
 test("minutesSince: clamps to zero for a start time later than now", () => {

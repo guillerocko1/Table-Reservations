@@ -1,4 +1,4 @@
-import { minutesSince, type Reservation, type ReservationStatus } from "@/lib/reservations";
+import { minutesSince, minutesUntil, type Reservation, type ReservationStatus } from "@/lib/reservations";
 
 interface ReservationDetailsProps {
   tableNumber: number | null;
@@ -66,6 +66,11 @@ export function ReservationDetails({ tableNumber, reservation, status, now, onCl
               valueClassName="text-lg font-semibold text-[var(--color-occupied-text)]"
             />
             <Detail label="Time limit" value={`${reservation.timeLimitMinutes} min`} />
+            <Detail
+              label="Minutes left"
+              value={reservation.finalTime ? `${minutesUntil(reservation.finalTime, now)} min` : "Not seated yet"}
+              valueClassName="text-lg font-semibold text-[var(--color-occupied-text)]"
+            />
             {/* Final time gets extra size on top of its color — it's the
                 single most important number for staff to notice at a glance
                 (when a table needs to turn over). */}
