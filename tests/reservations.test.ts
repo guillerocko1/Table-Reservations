@@ -171,7 +171,7 @@ test("validateReservationInput: rejects zero or fractional party size", () => {
 });
 
 test("validateReservationInput: accepts every documented time limit, rejects anything else", () => {
-  const validLimits = [30, 45, 60, 75, 90, 105, 120, 150] as const;
+  const validLimits = [30, 45, 60, 75, 90, 105, 120, 135] as const;
   for (const timeLimitMinutes of validLimits) {
     const result = validateReservationInput({
       guestName: "Alex",

@@ -24,7 +24,7 @@ interface ReservationPanelProps {
 }
 
 const CELEBRATIONS: Celebration[] = ["None", "Birthday", "Anniversary", "Engagement", "Other"];
-const TIME_LIMITS: TimeLimitMinutes[] = [30, 45, 60, 75, 90, 105, 120, 150];
+const TIME_LIMITS: TimeLimitMinutes[] = [30, 45, 60, 75, 90, 105, 120, 135];
 const TIME_LIMIT_LABELS: Record<TimeLimitMinutes, string> = {
   30: "30 minutes",
   45: "45 minutes",
@@ -33,7 +33,7 @@ const TIME_LIMIT_LABELS: Record<TimeLimitMinutes, string> = {
   90: "1 h 30 minutes",
   105: "1 h 45 minutes",
   120: "2 hours",
-  150: "2 h 30 minutes",
+  135: "2 h 15 minutes",
 };
 
 function emptyInput(): ReservationInput {
