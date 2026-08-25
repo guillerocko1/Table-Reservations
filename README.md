@@ -39,7 +39,7 @@ npm run build       # production build
 
 ## Deployment
 
-Pushing to `master` builds the app as a static export (`next build` with
+Pushing to `main` builds the app as a static export (`next build` with
 `output: "export"`, no server needed since everything runs against
 `localStorage`) and publishes it to GitHub Pages via
 `.github/workflows/deploy.yml`. The live URL is under the repo's
@@ -47,7 +47,7 @@ Pushing to `master` builds the app as a static export (`next build` with
 
 The one-time setup, after pushing this repo to GitHub: go to
 **Settings → Pages → Source** and select **GitHub Actions**. After that,
-every push to `master` deploys automatically — no manual steps.
+every push to `main` deploys automatically — no manual steps.
 
 To build the static export locally (e.g. to preview `out/` before pushing):
 
