@@ -11,18 +11,30 @@
   --color-accent: #b5502f;
   --color-accent-hover: #963f23;
 
-  --color-available-bg: #eef1ec;
-  --color-available-border: #b7c4b3;
-  --color-available-text: #3d4a3a;
+  /* Available ("open") — green, from the reference swatch. */
+  --color-available-bg: #e9f3e5;
+  --color-available-border: #5a9548;
+  --color-available-text: #2f4a26;
 
+  /* Reserved (booked, not yet seated) — unchanged: its own blue-gray,
+     deliberately distinct from Occupied's new blue below. */
   --color-reserved-bg: #e7eef7;
   --color-reserved-border: #7fa3d1;
   --color-reserved-text: #1f3a5f;
 
-  --color-occupied-bg: #fbf1dc;
-  --color-occupied-border: #dca43c;
-  --color-occupied-text: #6b4a12;
+  /* Occupied, plenty of time left ("seated") — blue, from the reference
+     swatch. */
+  --color-occupied-bg: #e7f0fa;
+  --color-occupied-border: #4a90d6;
+  --color-occupied-text: #1f3a5c;
 
+  /* Occupied, 30 minutes or less left — gold/yellow, from the reference
+     swatch. Reuses the old Occupied amber's text color for continuity. */
+  --color-warning-bg: #fbf3dd;
+  --color-warning-border: #dda83a;
+  --color-warning-text: #6b4a12;
+
+  /* Overdue, and occupied with 15 minutes or less left — red. Unchanged. */
   --color-overdue-bg: #fbeae7;
   --color-overdue-border: #dd6355;
   --color-overdue-text: #7a2018;

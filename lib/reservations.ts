@@ -147,6 +147,27 @@ export function statusFor(reservation: Reservation | undefined, now: Date): Rese
   return nowMinutes > finalMinutes ? "overdue" : "occupied";
 }
 
+// "warning" is the only tier that isn't also a ReservationStatus — it's an
+// extra rung inserted between "occupied" and "overdue" for the floor plan's
+// color gradient (green/blue/yellow/red), without changing what counts as
+// "occupied" vs "overdue" for status labels or the summary bar.
+export type ColorTier = ReservationStatus | "warning";
+
+// Grades an occupied table's color by urgency: plenty of time left stays
+// "occupied" (blue), 30 minutes or less left becomes "warning" (yellow),
+// and 15 minutes or less left is treated the same as "overdue" (red) — a
+// table that's about to run out and one that already has both need staff's
+// attention right away. Every other status passes through unchanged.
+export function colorTierFor(status: ReservationStatus, reservation: Reservation | undefined, now: Date): ColorTier {
+  if (status !== "occupied") return status;
+  // statusFor only returns "occupied" when reservation and finalTime are
+  // both set, so this read is safe.
+  const minutesLeft = minutesUntil(reservation!.finalTime!, now);
+  if (minutesLeft <= 15) return "overdue";
+  if (minutesLeft <= 30) return "warning";
+  return "occupied";
+}
+
 export function validateReservationInput(
   input: ReservationInput,
 ): { valid: boolean; errors: Partial<Record<keyof ReservationInput, string>> } {

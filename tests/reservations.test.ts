@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  colorTierFor,
   computeFinalTime,
   formatTime12Hour,
   minutesSince,
@@ -68,6 +69,49 @@ test("statusFor: seated and past the final time is overdue", () => {
   now.setHours(20, 30, 0, 0);
   const reservation = makeReservation({ startTime: "18:00", finalTime: "20:00" });
   assert.equal(statusFor(reservation, now), "overdue");
+});
+
+test("colorTierFor: available and reserved pass through unchanged", () => {
+  assert.equal(colorTierFor("available", undefined, new Date()), "available");
+  const reserved = makeReservation();
+  assert.equal(colorTierFor("reserved", reserved, new Date()), "reserved");
+});
+
+test("colorTierFor: overdue passes through unchanged", () => {
+  const reservation = makeReservation({ startTime: "18:00", finalTime: "20:00" });
+  const now = new Date();
+  now.setHours(20, 30, 0, 0);
+  assert.equal(colorTierFor("overdue", reservation, now), "overdue");
+});
+
+test("colorTierFor: occupied with more than 30 minutes left stays occupied", () => {
+  const reservation = makeReservation({ startTime: "18:00", finalTime: "20:00" });
+  const now = new Date();
+  now.setHours(19, 0, 0, 0); // 60 min left
+  assert.equal(colorTierFor("occupied", reservation, now), "occupied");
+});
+
+test("colorTierFor: occupied with 30 minutes or less left is a warning", () => {
+  const reservation = makeReservation({ startTime: "18:00", finalTime: "20:00" });
+  const now = new Date();
+  now.setHours(19, 30, 0, 0); // exactly 30 min left
+  assert.equal(colorTierFor("occupied", reservation, now), "warning");
+});
+
+test("colorTierFor: occupied with 15 minutes or less left is overdue-colored (critical)", () => {
+  const reservation = makeReservation({ startTime: "18:00", finalTime: "20:00" });
+
+  const fifteenLeft = new Date();
+  fifteenLeft.setHours(19, 45, 0, 0); // exactly 15 min left
+  assert.equal(colorTierFor("occupied", reservation, fifteenLeft), "overdue");
+
+  const fiveLeft = new Date();
+  fiveLeft.setHours(19, 55, 0, 0); // 5 min left
+  assert.equal(colorTierFor("occupied", reservation, fiveLeft), "overdue");
+
+  const zeroLeft = new Date();
+  zeroLeft.setHours(20, 0, 0, 0); // 0 min left, right at the final time
+  assert.equal(colorTierFor("occupied", reservation, zeroLeft), "overdue");
 });
 
 test("validateReservationInput: valid input has no errors", () => {

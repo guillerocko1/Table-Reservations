@@ -1,4 +1,4 @@
-import { minutesSince, type Reservation, type ReservationStatus } from "@/lib/reservations";
+import { colorTierFor, minutesSince, type ColorTier, type Reservation, type ReservationStatus } from "@/lib/reservations";
 import type { TableShape } from "@/lib/tables";
 
 interface TableCardProps {
@@ -29,13 +29,17 @@ interface TableCardProps {
   onSelect: (tableNumber: number) => void;
 }
 
-const STATUS_STYLES: Record<ReservationStatus, string> = {
+// Keyed by color TIER, not status — "warning" (30 min or less left) sits
+// between Occupied and Overdue's colors without changing what a table's
+// status LABEL says (see STATUS_LABELS below, still keyed by status).
+const COLOR_TIER_STYLES: Record<ColorTier, string> = {
   available:
     "bg-[var(--color-available-bg)] border-[var(--color-available-border)] text-[var(--color-available-text)]",
   reserved:
     "bg-[var(--color-reserved-bg)] border-[var(--color-reserved-border)] text-[var(--color-reserved-text)]",
   occupied:
     "bg-[var(--color-occupied-bg)] border-[var(--color-occupied-border)] text-[var(--color-occupied-text)]",
+  warning: "bg-[var(--color-warning-bg)] border-[var(--color-warning-border)] text-[var(--color-warning-text)]",
   overdue:
     "bg-[var(--color-overdue-bg)] border-[var(--color-overdue-border)] text-[var(--color-overdue-text)]",
 };
@@ -102,6 +106,8 @@ export function TableCard({
       ? minutesSince(reservation.startTime, now)
       : null;
 
+  const colorClass = COLOR_TIER_STYLES[colorTierFor(status, reservation, now)];
+
   const title = reservation
     ? `Table ${tableNumber} · ${STATUS_LABELS[status]} · ${reservation.guestName} · ${reservation.partySize}${
         reservation.tags.length > 0 ? ` · ${reservation.tags.join(", ")}` : ""
@@ -116,7 +122,7 @@ export function TableCard({
         type="button"
         onClick={() => onSelect(tableNumber)}
         title={title}
-        className={`flex flex-col items-center justify-center gap-0.5 border-2 text-center transition hover:brightness-95 ${seatFrame} ${STATUS_STYLES[status]}`}
+        className={`flex flex-col items-center justify-center gap-0.5 border-2 text-center transition hover:brightness-95 ${seatFrame} ${colorClass}`}
       >
         <span className={`font-serif font-bold ${small ? "text-[10px]" : "text-sm"}`}>{tableNumber}</span>
         {/* A 40px circle can't fit a second line legibly — full details
@@ -142,7 +148,7 @@ export function TableCard({
     <button
       type="button"
       onClick={() => onSelect(tableNumber)}
-      className={`flex flex-col items-center justify-center gap-1 border-2 p-2 text-center transition hover:brightness-95 ${frameClass} ${STATUS_STYLES[status]}`}
+      className={`flex flex-col items-center justify-center gap-1 border-2 p-2 text-center transition hover:brightness-95 ${frameClass} ${colorClass}`}
     >
       <span className="font-serif text-xl font-bold">{tableNumber}</span>
       <span className="text-[11px] font-medium uppercase tracking-wide">{STATUS_LABELS[status]}</span>
