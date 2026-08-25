@@ -7,6 +7,17 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    ignores: ["node_modules/**", ".next/**"],
+    ignores: ["node_modules/**", ".next/**", "out/**"],
+  },
+  {
+    // Node-only config files (next.config.mjs, postcss.config.mjs, this
+    // file) run under Node, not the browser — they need `process` etc.
+    // recognized as a real global instead of triggering no-undef.
+    files: ["*.config.mjs"],
+    languageOptions: {
+      globals: {
+        process: "readonly",
+      },
+    },
   },
 );

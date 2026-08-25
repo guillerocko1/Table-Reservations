@@ -37,10 +37,28 @@ npm run test        # unit tests for lib/tables.ts (incl. isWideTable), lib/rese
 npm run build       # production build
 ```
 
+## Deployment
+
+Pushing to `master` builds the app as a static export (`next build` with
+`output: "export"`, no server needed since everything runs against
+`localStorage`) and publishes it to GitHub Pages via
+`.github/workflows/deploy.yml`. The live URL is under the repo's
+**Settings → Pages** once the first deploy finishes.
+
+The one-time setup, after pushing this repo to GitHub: go to
+**Settings → Pages → Source** and select **GitHub Actions**. After that,
+every push to `master` deploys automatically — no manual steps.
+
+To build the static export locally (e.g. to preview `out/` before pushing):
+
+```bash
+npm run build
+npx serve out
+```
+
 ## What's not built yet (see docs/superpowers/specs for the full design)
 
 - Real database / multi-device sync — right now state is per-browser only.
 - Real employee accounts / login — the `/staff` page has no editing UI, but
   it isn't access-controlled; anyone with the URL can view it.
 - Multi-restaurant support.
-- Deployment (currently local-only via `next dev`).
