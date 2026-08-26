@@ -49,6 +49,13 @@ jobs:
           # prefix for a project site — next.config.mjs reads this to set
           # basePath. Locally this env var is unset, so basePath is "".
           PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          # NEXT_PUBLIC_* values get baked in at build time (static
+          # export has no server to read env vars at runtime), so these
+          # must be set here, not just in each developer's .env.local.
+          # Set as repository variables under Settings → Secrets and
+          # variables → Actions → Variables — see README's Setup section.
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
