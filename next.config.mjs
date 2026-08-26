@@ -4,9 +4,9 @@ const nextConfig = {
 
   // Static export: this app has no API routes, no server actions, no
   // cookies/rewrites/redirects — everything runs client-side against
-  // localStorage, so it doesn't need a Node server. `next build` emits
-  // plain HTML/CSS/JS into `out/`, servable from GitHub Pages (or any
-  // static host).
+  // Supabase (see lib/supabaseClient.ts), so it doesn't need a Node server.
+  // `next build` emits plain HTML/CSS/JS into `out/`, servable from GitHub
+  // Pages (or any static host).
   output: "export",
 
   // GitHub Pages serves a project site at https://<user>.github.io/<repo>/,

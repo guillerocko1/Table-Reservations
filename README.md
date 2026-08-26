@@ -31,8 +31,12 @@ values (Supabase dashboard → Project Settings → API → Project URL and
 cp .env.example .env.local
 ```
 
-Without this, `npm run dev` / `npm run build` fail fast with a clear error
-naming the missing variable.
+Without this, the app fails fast with a clear error naming the missing
+variable: `npm run build` fails immediately during the static export step,
+and `npm run dev` throws the same error the moment you load the page in
+your browser (the dev server process itself still starts fine — the
+missing-variable check lives in `lib/supabaseClient.ts`, which only runs
+when a page actually renders).
 
 ## Table layout
 
@@ -77,7 +81,12 @@ npx serve out
 ## What's not built yet (see docs/superpowers/specs for the full design)
 
 - Real employee accounts / login — the `/staff` page has no editing UI, but
-  it isn't access-controlled; anyone with the URL can view it.
+  it isn't access-controlled; anyone with the URL can view it. The same
+  openness goes further than the UI implies: the Supabase anon key ships in
+  the browser bundle, so anyone can also write to the database directly
+  (not just view or edit through the app's own screens). This is an
+  accepted risk for now, not an oversight — see the design spec's
+  Non-Goals on rate limiting / abuse protection.
 - Offline support — if a device can't reach Supabase it shows a clear
   disconnected/error state, but changes made while offline aren't queued.
 - Multi-restaurant support.
