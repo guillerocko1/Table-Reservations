@@ -1394,6 +1394,8 @@ git add components/ReservationPanel.tsx
 git commit -m "Make ReservationPanel's save/seat/clear async with error display"
 ```
 
+**Amendment (found in the final whole-branch review, commits 3835165, 665fca9, 8205c6a):** the code above has the reset `useEffect` depending on `[tableNumber, reservation]`. This is a real bug: `reservation` gets a brand-new object identity on *every* realtime change to *any* table (the whole floor is refetched on each change, per Task 3's `subscribeToReservations`), so the effect re-fires on unrelated devices' actions — silently wiping in-progress edits, wiping the whole form on a failed save right as the error should show, and clearing that same error via the effect's own `setSaveError(null)`. The fix narrows the effect's dependency array to `[tableNumber]` only (still reading `reservation` fresh inside the body — safe, since the parent updates both props together on a genuine table switch). The same final review also found the server-roster `onSetServerName` call site had no error handling for a failed write (unhandled rejection) and wrote to Supabase on every keystroke (risking a stale-echo revert race under latency) — fixed by buffering edits in local `draftServerNames` state and committing on blur via a new `handleServerNameCommit` handler, with a `serverNameError` state displayed unconditionally (not gated on whether the roster-editing view happens to be open — an oversight in the first attempt at this same fix, caught by the fix's own scoped re-review). See `components/ReservationPanel.tsx` for the final, verified code — reproducing it here in full would just duplicate the file.
+
 ---
 
 ### Task 9: Retire the localStorage persistence layer and wire up deployment
