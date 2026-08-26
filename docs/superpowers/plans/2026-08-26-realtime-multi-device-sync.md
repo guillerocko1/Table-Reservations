@@ -771,17 +771,28 @@ export function useReservations(): UseReservationsResult {
   // Each mutation applies its change to local state immediately (so the
   // initiating device feels instant) and rolls back if the Supabase write
   // fails - the caller (ReservationPanel) catches the rethrown error to
-  // show an inline message.
+  // show an inline message. Rollback uses the functional setState form and
+  // restores only the one affected table key (not the whole map captured
+  // before the mutation) so a realtime update for a different table - or
+  // this device's own separately-succeeded mutation - arriving while this
+  // write is in flight isn't silently discarded by the failure's rollback.
   const saveReservation = useCallback(
     async (tableNumber: number, input: ReservationInput) => {
       const existing = reservationsByTable[tableNumber];
       const reservation = updateReservationFields(existing, tableNumber, input);
-      const previous = reservationsByTable;
       setReservationsByTable((current) => ({ ...current, [tableNumber]: reservation }));
       try {
         await upsertReservation(reservation);
       } catch (error) {
-        setReservationsByTable(previous);
+        setReservationsByTable((current) => {
+          const next = { ...current };
+          if (existing) {
+            next[tableNumber] = existing;
+          } else {
+            delete next[tableNumber];
+          }
+          return next;
+        });
         throw error;
       }
     },
@@ -797,12 +808,11 @@ export function useReservations(): UseReservationsResult {
         startTime,
         finalTime: computeFinalTime(startTime, existing.timeLimitMinutes),
       };
-      const previous = reservationsByTable;
       setReservationsByTable((current) => ({ ...current, [tableNumber]: updated }));
       try {
         await upsertReservation(updated);
       } catch (error) {
-        setReservationsByTable(previous);
+        setReservationsByTable((current) => ({ ...current, [tableNumber]: existing }));
         throw error;
       }
     },
@@ -811,7 +821,7 @@ export function useReservations(): UseReservationsResult {
 
   const clearTable = useCallback(
     async (tableNumber: number) => {
-      const previous = reservationsByTable;
+      const existing = reservationsByTable[tableNumber];
       setReservationsByTable((current) => {
         const next = { ...current };
         delete next[tableNumber];
@@ -820,7 +830,9 @@ export function useReservations(): UseReservationsResult {
       try {
         await deleteReservation(tableNumber);
       } catch (error) {
-        setReservationsByTable(previous);
+        if (existing) {
+          setReservationsByTable((current) => ({ ...current, [tableNumber]: existing }));
+        }
         throw error;
       }
     },
