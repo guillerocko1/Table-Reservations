@@ -12,70 +12,102 @@ import {
   type StatusSummary,
 } from "./reservations";
 import { ALL_TABLE_NUMBERS } from "./tables";
-import { createMemoryStore, createReservationStore, isStoreAvailable, type ReservationStore } from "./store";
+import {
+  deleteReservation,
+  fetchAllReservations,
+  subscribeToReservations,
+  upsertReservation,
+} from "./reservationsStore";
 
 const POLL_INTERVAL_MS = 30_000;
 
 export interface UseReservationsResult {
   reservationsByTable: Record<number, Reservation>;
   now: Date;
-  isPersistent: boolean;
+  isLoading: boolean;
+  isConnected: boolean;
+  loadError: string | null;
   getStatus: (tableNumber: number) => ReservationStatus;
   summary: StatusSummary;
-  saveReservation: (tableNumber: number, input: ReservationInput) => void;
-  seatTable: (tableNumber: number, startTime: string) => void;
-  clearTable: (tableNumber: number) => void;
-}
-
-function getBrowserStore(): ReservationStore {
-  if (typeof window !== "undefined" && isStoreAvailable(window.localStorage)) {
-    return createReservationStore(window.localStorage);
-  }
-  return createReservationStore(createMemoryStore());
+  saveReservation: (tableNumber: number, input: ReservationInput) => Promise<void>;
+  seatTable: (tableNumber: number, startTime: string) => Promise<void>;
+  clearTable: (tableNumber: number) => Promise<void>;
+  retry: () => void;
 }
 
 export function useReservations(): UseReservationsResult {
-  const [store] = useState(getBrowserStore);
   const [reservationsByTable, setReservationsByTable] = useState<Record<number, Reservation>>({});
-  // Starts true (the common case) so server and client agree on first
-  // paint; the store's identity can differ between environments since it's
-  // never rendered directly, but this flag IS rendered into JSX, so it must
-  // start identical everywhere and only pick up its real value post-mount.
-  const [isPersistent, setIsPersistent] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [now, setNow] = useState(new Date());
+  const [retryToken, setRetryToken] = useState(0);
 
-  // Load whatever was already saved once the component mounts on the
-  // client (server-rendered output always starts empty, so this can't
-  // cause a hydration mismatch).
+  // Initial fetch + realtime subscription for this hook's lifetime. Reruns
+  // on retry() (a failed initial load) but never on its own after that -
+  // subsequent updates arrive via the realtime subscription, not a refetch
+  // of this effect.
   useEffect(() => {
-    setReservationsByTable(store.getAll());
-    setIsPersistent(typeof window !== "undefined" && isStoreAvailable(window.localStorage));
-  }, [store]);
+    let cancelled = false;
+    setIsLoading(true);
+    setLoadError(null);
 
-  // Re-derive statuses periodically so an Occupied table flips to Overdue
-  // live, without the employee needing to refresh the page.
+    fetchAllReservations()
+      .then((byTable) => {
+        if (!cancelled) {
+          setReservationsByTable(byTable);
+          setIsLoading(false);
+        }
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setLoadError(error instanceof Error ? error.message : "Failed to load reservations.");
+          setIsLoading(false);
+        }
+      });
+
+    const unsubscribe = subscribeToReservations(
+      (byTable) => {
+        if (!cancelled) setReservationsByTable(byTable);
+      },
+      (status) => {
+        if (!cancelled) setIsConnected(status === "connected");
+      },
+    );
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [retryToken]);
+
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), POLL_INTERVAL_MS);
     return () => clearInterval(timer);
   }, []);
 
-  // store.save/store.clear are called here, in the event handler itself,
-  // rather than inside the setReservationsByTable updater below — updater
-  // functions run during React's render phase and aren't guaranteed to run
-  // exactly once (Strict Mode double-invokes them), so side effects like
-  // localStorage writes don't belong there.
+  // Each mutation applies its change to local state immediately (so the
+  // initiating device feels instant) and rolls back if the Supabase write
+  // fails - the caller (ReservationPanel) catches the rethrown error to
+  // show an inline message.
   const saveReservation = useCallback(
-    (tableNumber: number, input: ReservationInput) => {
+    async (tableNumber: number, input: ReservationInput) => {
       const existing = reservationsByTable[tableNumber];
       const reservation = updateReservationFields(existing, tableNumber, input);
-      store.save(reservation);
+      const previous = reservationsByTable;
       setReservationsByTable((current) => ({ ...current, [tableNumber]: reservation }));
+      try {
+        await upsertReservation(reservation);
+      } catch (error) {
+        setReservationsByTable(previous);
+        throw error;
+      }
     },
-    [reservationsByTable, store],
+    [reservationsByTable],
   );
 
   const seatTable = useCallback(
-    (tableNumber: number, startTime: string) => {
+    async (tableNumber: number, startTime: string) => {
       const existing = reservationsByTable[tableNumber];
       if (!existing) return;
       const updated: Reservation = {
@@ -83,23 +115,37 @@ export function useReservations(): UseReservationsResult {
         startTime,
         finalTime: computeFinalTime(startTime, existing.timeLimitMinutes),
       };
-      store.save(updated);
+      const previous = reservationsByTable;
       setReservationsByTable((current) => ({ ...current, [tableNumber]: updated }));
+      try {
+        await upsertReservation(updated);
+      } catch (error) {
+        setReservationsByTable(previous);
+        throw error;
+      }
     },
-    [reservationsByTable, store],
+    [reservationsByTable],
   );
 
   const clearTable = useCallback(
-    (tableNumber: number) => {
-      store.clear(tableNumber);
+    async (tableNumber: number) => {
+      const previous = reservationsByTable;
       setReservationsByTable((current) => {
         const next = { ...current };
         delete next[tableNumber];
         return next;
       });
+      try {
+        await deleteReservation(tableNumber);
+      } catch (error) {
+        setReservationsByTable(previous);
+        throw error;
+      }
     },
-    [store],
+    [reservationsByTable],
   );
+
+  const retry = useCallback(() => setRetryToken((token) => token + 1), []);
 
   const summary = useMemo(
     () => summarizeStatuses(reservationsByTable, ALL_TABLE_NUMBERS, now),
@@ -109,11 +155,14 @@ export function useReservations(): UseReservationsResult {
   return {
     reservationsByTable,
     now,
-    isPersistent,
+    isLoading,
+    isConnected,
+    loadError,
     getStatus: (tableNumber: number) => statusFor(reservationsByTable[tableNumber], now),
     summary,
     saveReservation,
     seatTable,
     clearTable,
+    retry,
   };
 }
