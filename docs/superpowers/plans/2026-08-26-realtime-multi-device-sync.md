@@ -936,7 +936,7 @@ export function useServerRoster(): UseServerRosterResult {
 
   const setServerName = useCallback(
     async (index: number, name: string) => {
-      const previous = serverNames;
+      const previous = serverNames[index];
       setServerNames((current) => {
         const next = [...current];
         next[index] = name;
@@ -945,7 +945,15 @@ export function useServerRoster(): UseServerRosterResult {
       try {
         await setServerNameRemote(index, name);
       } catch (error) {
-        setServerNames(previous);
+        // Scoped to this one slot (not the whole array) so a realtime
+        // update to a different slot that arrived while this write was in
+        // flight isn't discarded by the rollback — same reasoning as
+        // useReservations' per-table rollback.
+        setServerNames((current) => {
+          const next = [...current];
+          next[index] = previous;
+          return next;
+        });
         throw error;
       }
     },
