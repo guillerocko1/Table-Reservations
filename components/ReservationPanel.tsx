@@ -16,7 +16,7 @@ interface ReservationPanelProps {
   tableNumber: number | null;
   reservation: Reservation | undefined;
   serverNames: string[];
-  onSetServerName: (index: number, name: string) => void;
+  onSetServerName: (index: number, name: string) => Promise<void>;
   onSave: (tableNumber: number, input: ReservationInput) => Promise<void>;
   onSeat: (tableNumber: number, startTime: string) => Promise<void>;
   onClear: (tableNumber: number) => Promise<void>;
@@ -64,6 +64,8 @@ export function ReservationPanel({
   const [errors, setErrors] = useState<ReturnType<typeof validateReservationInput>["errors"]>({});
   const [editingServerList, setEditingServerList] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [draftServerNames, setDraftServerNames] = useState<string[]>(serverNames);
+  const [serverNameError, setServerNameError] = useState<string | null>(null);
 
   useEffect(() => {
     if (reservation) {
@@ -87,7 +89,28 @@ export function ReservationPanel({
     }
     setErrors({});
     setSaveError(null);
-  }, [tableNumber, reservation]);
+    // Deliberately depends on tableNumber only, not on `reservation` itself.
+    // `reservation` gets a brand-new object identity on every realtime
+    // change to ANY table (the whole floor's data is refetched on each
+    // change — see lib/reservationsStore.ts's subscribeToReservations),
+    // not just this one. Depending on it here would re-run this reset
+    // whenever an unrelated device saves a different table, wiping
+    // whatever the user is currently typing, and would also wipe the
+    // just-shown save/seat/clear error the moment the optimistic update
+    // that triggered it rolls back on failure. Reading `reservation` fresh
+    // inside the effect body is safe: this component re-renders (recreating
+    // this effect's closure) whenever tableNumber changes, since the parent
+    // always updates both props together on a genuine table switch.
+  }, [tableNumber]);
+
+  // Reload the draft from the live roster only when entering edit mode, not
+  // on every remote change while already editing — same "don't clobber
+  // in-progress typing" reasoning as the effect above.
+  useEffect(() => {
+    if (editingServerList) {
+      setDraftServerNames(serverNames);
+    }
+  }, [editingServerList]);
 
   if (tableNumber === null) return null;
 
@@ -118,6 +141,16 @@ export function ReservationPanel({
       await onClear(tableNumber as number);
     } catch {
       setSaveError("Couldn't clear this table — check your connection and try again.");
+    }
+  }
+
+  async function handleServerNameCommit(index: number, name: string) {
+    if (name === serverNames[index]) return;
+    setServerNameError(null);
+    try {
+      await onSetServerName(index, name);
+    } catch {
+      setServerNameError("Couldn't update the server list — check your connection and try again.");
     }
   }
 
@@ -255,15 +288,24 @@ export function ReservationPanel({
 
           {editingServerList ? (
             <div className="flex flex-col gap-1.5 rounded-md border border-[var(--color-border)] p-2">
-              {serverNames.map((name, index) => (
+              {draftServerNames.map((name, index) => (
                 <input
                   key={index}
                   className="rounded-md border border-[var(--color-border)] px-2 py-1 text-sm"
                   value={name}
                   placeholder={`Server ${index + 1}`}
-                  onChange={(event) => onSetServerName(index, event.target.value)}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setDraftServerNames((current) => {
+                      const next = [...current];
+                      next[index] = value;
+                      return next;
+                    });
+                  }}
+                  onBlur={(event) => handleServerNameCommit(index, event.target.value)}
                 />
               ))}
+              {serverNameError && <p className="text-xs text-[var(--color-overdue-text)]">{serverNameError}</p>}
             </div>
           ) : (
             <select
