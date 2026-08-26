@@ -9,10 +9,11 @@ import { ReservationDetails } from "@/components/ReservationDetails";
 
 // Read-only mirror of the admin page ("/"): same live data via the same
 // hook, same floor plan, but selecting a table opens ReservationDetails
-// instead of ReservationPanel — no add/edit/seat/clear controls anywhere
+// instead of ReservationPanel - no add/edit/seat/clear controls anywhere
 // on this page.
 export default function StaffView() {
-  const { reservationsByTable, isPersistent, getStatus, summary, now } = useReservations();
+  const { reservationsByTable, isLoading, isConnected, loadError, getStatus, summary, now, retry } =
+    useReservations();
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
 
   return (
@@ -21,9 +22,10 @@ export default function StaffView() {
         <div>
           <h1 className="font-serif text-3xl font-bold text-[var(--color-text)]">Elena&apos;s Restaurant - West Portal</h1>
           <p className="text-sm text-[var(--color-text-muted)]">Staff view — click a table to see its details</p>
-          {!isPersistent && (
+          {!isLoading && !loadError && !isConnected && (
             <p className="mt-2 rounded-md bg-[var(--color-overdue-bg)] px-3 py-2 text-sm text-[var(--color-overdue-text)]">
-              This browser isn&apos;t saving changes between visits (private browsing?).
+              Reconnecting to the shared reservation data &mdash; this view may be stale until it
+              comes back.
             </p>
           )}
         </div>
@@ -35,22 +37,39 @@ export default function StaffView() {
         </Link>
       </header>
 
-      <StatusSummary summary={summary} />
+      {loadError ? (
+        <div className="rounded-md border border-[var(--color-overdue-border)] bg-[var(--color-overdue-bg)] p-4 text-[var(--color-overdue-text)]">
+          <p className="font-medium">Couldn&apos;t load reservations: {loadError}</p>
+          <button
+            type="button"
+            onClick={retry}
+            className="mt-2 rounded-md border border-current px-3 py-1.5 text-sm font-medium"
+          >
+            Retry
+          </button>
+        </div>
+      ) : isLoading ? (
+        <p className="text-sm text-[var(--color-text-muted)]">Loading reservations…</p>
+      ) : (
+        <>
+          <StatusSummary summary={summary} />
 
-      <FloorPlan
-        reservationsByTable={reservationsByTable}
-        getStatus={getStatus}
-        now={now}
-        onSelectTable={setSelectedTable}
-      />
+          <FloorPlan
+            reservationsByTable={reservationsByTable}
+            getStatus={getStatus}
+            now={now}
+            onSelectTable={setSelectedTable}
+          />
 
-      <ReservationDetails
-        tableNumber={selectedTable}
-        reservation={selectedTable !== null ? reservationsByTable[selectedTable] : undefined}
-        status={selectedTable !== null ? getStatus(selectedTable) : "available"}
-        now={now}
-        onClose={() => setSelectedTable(null)}
-      />
+          <ReservationDetails
+            tableNumber={selectedTable}
+            reservation={selectedTable !== null ? reservationsByTable[selectedTable] : undefined}
+            status={selectedTable !== null ? getStatus(selectedTable) : "available"}
+            now={now}
+            onClose={() => setSelectedTable(null)}
+          />
+        </>
+      )}
     </main>
   );
 }

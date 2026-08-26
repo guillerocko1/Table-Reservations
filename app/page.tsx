@@ -9,8 +9,19 @@ import { FloorPlan } from "@/components/FloorPlan";
 import { ReservationPanel } from "@/components/ReservationPanel";
 
 export default function Home() {
-  const { reservationsByTable, isPersistent, getStatus, summary, now, saveReservation, seatTable, clearTable } =
-    useReservations();
+  const {
+    reservationsByTable,
+    isLoading,
+    isConnected,
+    loadError,
+    getStatus,
+    summary,
+    now,
+    saveReservation,
+    seatTable,
+    clearTable,
+    retry,
+  } = useReservations();
   const { serverNames, setServerName } = useServerRoster();
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
 
@@ -20,10 +31,10 @@ export default function Home() {
         <div>
           <h1 className="font-serif text-3xl font-bold text-[var(--color-text)]">Elena&apos;s Restaurant - West Portal</h1>
           <p className="text-sm text-[var(--color-text-muted)]">Bar and main dining floor plan</p>
-          {!isPersistent && (
+          {!isLoading && !loadError && !isConnected && (
             <p className="mt-2 rounded-md bg-[var(--color-overdue-bg)] px-3 py-2 text-sm text-[var(--color-overdue-text)]">
-              Your browser isn&apos;t saving changes between visits (private browsing?). Changes will be lost
-              when you close this tab.
+              Reconnecting to the shared reservation data &mdash; changes from other devices may not
+              appear until this comes back.
             </p>
           )}
         </div>
@@ -35,28 +46,45 @@ export default function Home() {
         </Link>
       </header>
 
-      <StatusSummary summary={summary} />
+      {loadError ? (
+        <div className="rounded-md border border-[var(--color-overdue-border)] bg-[var(--color-overdue-bg)] p-4 text-[var(--color-overdue-text)]">
+          <p className="font-medium">Couldn&apos;t load reservations: {loadError}</p>
+          <button
+            type="button"
+            onClick={retry}
+            className="mt-2 rounded-md border border-current px-3 py-1.5 text-sm font-medium"
+          >
+            Retry
+          </button>
+        </div>
+      ) : isLoading ? (
+        <p className="text-sm text-[var(--color-text-muted)]">Loading reservations…</p>
+      ) : (
+        <>
+          <StatusSummary summary={summary} />
 
-      <FloorPlan
-        reservationsByTable={reservationsByTable}
-        getStatus={getStatus}
-        now={now}
-        onSelectTable={setSelectedTable}
-      />
+          <FloorPlan
+            reservationsByTable={reservationsByTable}
+            getStatus={getStatus}
+            now={now}
+            onSelectTable={setSelectedTable}
+          />
 
-      <ReservationPanel
-        tableNumber={selectedTable}
-        reservation={selectedTable !== null ? reservationsByTable[selectedTable] : undefined}
-        serverNames={serverNames}
-        onSetServerName={setServerName}
-        onSave={(tableNumber, input) => saveReservation(tableNumber, input)}
-        onSeat={(tableNumber, startTime) => seatTable(tableNumber, startTime)}
-        onClear={(tableNumber) => {
-          clearTable(tableNumber);
-          setSelectedTable(null);
-        }}
-        onClose={() => setSelectedTable(null)}
-      />
+          <ReservationPanel
+            tableNumber={selectedTable}
+            reservation={selectedTable !== null ? reservationsByTable[selectedTable] : undefined}
+            serverNames={serverNames}
+            onSetServerName={setServerName}
+            onSave={(tableNumber, input) => saveReservation(tableNumber, input)}
+            onSeat={(tableNumber, startTime) => seatTable(tableNumber, startTime)}
+            onClear={async (tableNumber) => {
+              await clearTable(tableNumber);
+              setSelectedTable(null);
+            }}
+            onClose={() => setSelectedTable(null)}
+          />
+        </>
+      )}
     </main>
   );
 }
