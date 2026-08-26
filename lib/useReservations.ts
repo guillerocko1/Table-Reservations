@@ -94,12 +94,19 @@ export function useReservations(): UseReservationsResult {
     async (tableNumber: number, input: ReservationInput) => {
       const existing = reservationsByTable[tableNumber];
       const reservation = updateReservationFields(existing, tableNumber, input);
-      const previous = reservationsByTable;
       setReservationsByTable((current) => ({ ...current, [tableNumber]: reservation }));
       try {
         await upsertReservation(reservation);
       } catch (error) {
-        setReservationsByTable(previous);
+        setReservationsByTable((current) => {
+          const next = { ...current };
+          if (existing) {
+            next[tableNumber] = existing;
+          } else {
+            delete next[tableNumber];
+          }
+          return next;
+        });
         throw error;
       }
     },
@@ -115,12 +122,11 @@ export function useReservations(): UseReservationsResult {
         startTime,
         finalTime: computeFinalTime(startTime, existing.timeLimitMinutes),
       };
-      const previous = reservationsByTable;
       setReservationsByTable((current) => ({ ...current, [tableNumber]: updated }));
       try {
         await upsertReservation(updated);
       } catch (error) {
-        setReservationsByTable(previous);
+        setReservationsByTable((current) => ({ ...current, [tableNumber]: existing }));
         throw error;
       }
     },
@@ -129,7 +135,7 @@ export function useReservations(): UseReservationsResult {
 
   const clearTable = useCallback(
     async (tableNumber: number) => {
-      const previous = reservationsByTable;
+      const existing = reservationsByTable[tableNumber];
       setReservationsByTable((current) => {
         const next = { ...current };
         delete next[tableNumber];
@@ -138,7 +144,9 @@ export function useReservations(): UseReservationsResult {
       try {
         await deleteReservation(tableNumber);
       } catch (error) {
-        setReservationsByTable(previous);
+        if (existing) {
+          setReservationsByTable((current) => ({ ...current, [tableNumber]: existing }));
+        }
         throw error;
       }
     },
