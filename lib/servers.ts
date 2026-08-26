@@ -1,30 +1,42 @@
-import type { KeyValueStore } from "./store.ts";
+import { supabase } from "./supabaseClient";
+import { MAX_SERVERS, rowsToServerNames, type ServerRow } from "./serverRows";
 
-// A short, fixed-size roster the admin fills in once (e.g. "Alex", "Sam")
-// so staff pick a server from a dropdown instead of retyping a name on
-// every reservation. Slots start empty — nothing to configure up front.
-export const MAX_SERVERS = 5;
+export { MAX_SERVERS };
 
-const SERVERS_STORAGE_KEY = "restaurant-reservations:servers:v1";
+export type RealtimeConnectionStatus = "connected" | "disconnected";
 
-// Always returns exactly MAX_SERVERS entries (padding with "" or truncating
-// extra), so callers can index by slot without bounds-checking.
-export function loadServerNames(store: KeyValueStore): string[] {
-  const raw = store.getItem(SERVERS_STORAGE_KEY);
-  const saved = raw ? parseServerNames(raw) : [];
-  return Array.from({ length: MAX_SERVERS }, (_, index) => saved[index] ?? "");
+export async function fetchServerNames(): Promise<string[]> {
+  const { data, error } = await supabase.from("servers").select("*");
+  if (error) throw error;
+  return rowsToServerNames((data ?? []) as ServerRow[]);
 }
 
-function parseServerNames(raw: string): string[] {
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter((name): name is string => typeof name === "string");
-  } catch {
-    return [];
-  }
+export async function setServerNameRemote(index: number, name: string): Promise<void> {
+  const { error } = await supabase
+    .from("servers")
+    .upsert({ slot_index: index, name }, { onConflict: "slot_index" });
+  if (error) throw error;
 }
 
-export function saveServerNames(store: KeyValueStore, names: string[]): void {
-  store.setItem(SERVERS_STORAGE_KEY, JSON.stringify(names.slice(0, MAX_SERVERS)));
+export function subscribeToServers(
+  onChange: (names: string[]) => void,
+  onStatusChange: (status: RealtimeConnectionStatus) => void,
+): () => void {
+  const channel = supabase
+    .channel("servers-changes")
+    .on("postgres_changes", { event: "*", schema: "public", table: "servers" }, () => {
+      fetchServerNames()
+        .then(onChange)
+        .catch(() => {
+          // Same reasoning as reservationsStore's subscribe: a missed
+          // refetch here just skips one realtime event.
+        });
+    })
+    .subscribe((status) => {
+      onStatusChange(status === "SUBSCRIBED" ? "connected" : "disconnected");
+    });
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }
