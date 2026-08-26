@@ -19,6 +19,19 @@ or http://localhost:3000/staff for a read-only staff view — same live
 floor plan, but clicking a table only shows its details, with no editing
 controls anywhere on that page.
 
+## Setup
+
+Copy `.env.example` to `.env.local` and fill in your Supabase project's
+values (Supabase dashboard → Project Settings → API → Project URL and
+`anon` `public` key):
+
+```bash
+cp .env.example .env.local
+```
+
+Without this, `npm run dev` / `npm run build` fail fast with a clear error
+naming the missing variable.
+
 ## Table layout
 
 - Bar Lounge: 61–63 (rectangular tables, shown in their own column near the entry)
