@@ -305,7 +305,6 @@ export function ReservationPanel({
                   onBlur={(event) => handleServerNameCommit(index, event.target.value)}
                 />
               ))}
-              {serverNameError && <p className="text-xs text-[var(--color-overdue-text)]">{serverNameError}</p>}
             </div>
           ) : (
             <select
@@ -330,6 +329,7 @@ export function ReservationPanel({
               )}
             </select>
           )}
+          {serverNameError && <p className="text-xs text-[var(--color-overdue-text)]">{serverNameError}</p>}
         </div>
 
         <button
