@@ -655,7 +655,7 @@ export function subscribeToServers(
 - [ ] **Step 7: Verify the full check suite passes**
 
 Run: `npm run typecheck && npm run lint && npm run test`
-Expected: all pass. `lib/useServerRoster.ts` still imports the now-removed `loadServerNames`/`saveServerNames`/`KeyValueStore` from the old `lib/servers.ts`/`lib/store.ts` API at this point — this is expected and fixed in Task 6, not here. If typecheck fails here, confirm the failure is exactly that (an error inside `lib/useServerRoster.ts`, not inside `lib/servers.ts` or `lib/serverRows.ts`).
+Expected: `lint` and `test` pass — no test file imports `lib/useServerRoster.ts` (hooks aren't unit-tested in this project, so the broken import below is invisible to `test`). `typecheck` fails with exactly one error, in `lib/useServerRoster.ts`: it still imports `loadServerNames`/`saveServerNames` from `./servers`, which this task's rewrite no longer exports — expected, fixed in Task 6, not here. Confirm that's the only typecheck error (not inside `lib/servers.ts` or `lib/serverRows.ts` themselves).
 
 - [ ] **Step 8: Commit**
 
@@ -853,7 +853,7 @@ export function useReservations(): UseReservationsResult {
 - [ ] **Step 2: Verify the full check suite passes**
 
 Run: `npm run typecheck && npm run lint && npm run test`
-Expected: `typecheck` and `test` pass. `lint` may still fail, and `app/page.tsx`/`app/staff/page.tsx`/`components/ReservationPanel.tsx` will fail typecheck at this point since they destructure the old `isPersistent` field and call `onSave`/`onSeat`/`onClear` as if synchronous — that's expected and fixed in Tasks 7-8. Confirm the failures are confined to those three files, not `lib/useReservations.ts` itself.
+Expected: `lint` and `test` pass. `typecheck` fails in exactly two places: `app/page.tsx` and `app/staff/page.tsx`, both still destructuring `isPersistent`, a field `UseReservationsResult` no longer has (replaced by `isLoading`/`isConnected`/`loadError`/`retry`) — fixed in Task 7. `lib/useServerRoster.ts` also still fails typecheck, carried over unfixed from Task 4 (it imports `loadServerNames`/`saveServerNames`, which `lib/servers.ts` no longer exports) — fixed in Task 6, not a regression introduced here. `components/ReservationPanel.tsx` is unaffected by this task and should still typecheck cleanly: its props aren't touched until Task 8, and TypeScript already allows a `Promise`-returning function where a `void`-returning one is expected, so passing the now-async `saveReservation`/`seatTable`/`clearTable` through unchanged prop types doesn't itself error. Confirm the typecheck errors are exactly those two carried-over/introduced ones, nothing in `lib/useReservations.ts` or `components/ReservationPanel.tsx`.
 
 - [ ] **Step 3: Commit**
 
@@ -947,7 +947,7 @@ export function useServerRoster(): UseServerRosterResult {
 - [ ] **Step 2: Verify the full check suite passes**
 
 Run: `npm run typecheck && npm run lint && npm run test`
-Expected: `typecheck` and `test` pass. `app/page.tsx` and `components/ReservationPanel.tsx` still fail typecheck at this point (old `isPersistent` usage, synchronous `onSetServerName` call sites) — expected, fixed in Tasks 7-8. Confirm the failures are confined to those files, not `lib/useServerRoster.ts` itself.
+Expected: `lint` and `test` pass. `typecheck` fails in exactly the same two places as after Task 5 — `app/page.tsx` and `app/staff/page.tsx`, both still destructuring the removed `isPersistent` field — fixed in Task 7. This task's own rewrite should have cleared the `lib/useServerRoster.ts` error that existed since Task 4. `ReservationPanel`'s `onSetServerName` prop never needs to change (it stays `(index: number, name: string) => void`, and TypeScript allows the now-async `setServerName` to satisfy that void-returning type), so `components/ReservationPanel.tsx` is not a source of errors at this or any later checkpoint. Confirm the two `isPersistent` errors are the only ones remaining.
 
 - [ ] **Step 3: Commit**
 
@@ -1148,8 +1148,8 @@ export default function StaffView() {
 
 - [ ] **Step 3: Verify the full check suite passes**
 
-Run: `npm run typecheck && npm run lint && npm run test`
-Expected: `typecheck`/`lint`/`test` pass. `npm run build` will still fail until Task 8 fixes `ReservationPanel`'s prop types (its `onSave`/`onSeat`/`onClear` props are still typed as synchronous, and this file now passes an `async` `onClear`) — confirm any remaining failure is confined to `components/ReservationPanel.tsx`.
+Run: `npm run typecheck && npm run lint && npm run test && npm run build`
+Expected: all four pass — this task clears the last two `isPersistent` errors, so the full check suite (including `build`) is fully green again here. That does *not* mean Task 8 is unnecessary: `ReservationPanel` still has no way to show a failed save/seat/clear to the user (the spec's Error Handling section requires an inline error on a failed mutation), which is what Task 8 adds — its prop-type update documents the async contract in the types but isn't itself what makes anything compile.
 
 - [ ] **Step 4: Commit**
 
@@ -1365,7 +1365,7 @@ to:
 - [ ] **Step 5: Verify the full check suite passes, including build**
 
 Run: `npm run typecheck && npm run lint && npm run test && npm run build`
-Expected: all four pass. This is the first point in the plan where `npm run build` succeeds end-to-end again — it will actually attempt to prerender `/` and `/staff`, which imports `lib/supabaseClient.ts` at build time, so this step also confirms `.env.local` (Task 1) is set up correctly locally.
+Expected: all four pass (the suite was already green after Task 7; this confirms this task's prop-type and error-handling changes didn't regress it). `build` prerenders `/` and `/staff`, which import `lib/supabaseClient.ts` at build time, so this step also reconfirms `.env.local` (Task 1) is set up correctly locally.
 
 - [ ] **Step 6: Commit**
 
