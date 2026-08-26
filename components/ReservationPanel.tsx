@@ -17,9 +17,9 @@ interface ReservationPanelProps {
   reservation: Reservation | undefined;
   serverNames: string[];
   onSetServerName: (index: number, name: string) => void;
-  onSave: (tableNumber: number, input: ReservationInput) => void;
-  onSeat: (tableNumber: number, startTime: string) => void;
-  onClear: (tableNumber: number) => void;
+  onSave: (tableNumber: number, input: ReservationInput) => Promise<void>;
+  onSeat: (tableNumber: number, startTime: string) => Promise<void>;
+  onClear: (tableNumber: number) => Promise<void>;
   onClose: () => void;
 }
 
@@ -63,6 +63,7 @@ export function ReservationPanel({
   const [startTime, setStartTime] = useState("18:00");
   const [errors, setErrors] = useState<ReturnType<typeof validateReservationInput>["errors"]>({});
   const [editingServerList, setEditingServerList] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (reservation) {
@@ -85,15 +86,38 @@ export function ReservationPanel({
       setStartTime("18:00");
     }
     setErrors({});
+    setSaveError(null);
   }, [tableNumber, reservation]);
 
   if (tableNumber === null) return null;
 
-  function handleSave() {
+  async function handleSave() {
     const result = validateReservationInput(input);
     setErrors(result.errors);
-    if (result.valid) {
-      onSave(tableNumber as number, input);
+    if (!result.valid) return;
+    setSaveError(null);
+    try {
+      await onSave(tableNumber as number, input);
+    } catch {
+      setSaveError("Couldn't save — check your connection and try again.");
+    }
+  }
+
+  async function handleSeat() {
+    setSaveError(null);
+    try {
+      await onSeat(tableNumber as number, startTime);
+    } catch {
+      setSaveError("Couldn't seat this table — check your connection and try again.");
+    }
+  }
+
+  async function handleClear() {
+    setSaveError(null);
+    try {
+      await onClear(tableNumber as number);
+    } catch {
+      setSaveError("Couldn't clear this table — check your connection and try again.");
     }
   }
 
@@ -274,6 +298,8 @@ export function ReservationPanel({
           {reservation ? "Save changes" : "Add reservation"}
         </button>
 
+        {saveError && <p className="text-sm text-[var(--color-overdue-text)]">{saveError}</p>}
+
         <div className="border-t border-[var(--color-border)] pt-4">
           <label className="flex flex-col gap-1 text-sm">
             Start time (when seated)
@@ -296,7 +322,7 @@ export function ReservationPanel({
           <button
             type="button"
             disabled={!reservation}
-            onClick={() => onSeat(tableNumber as number, startTime)}
+            onClick={handleSeat}
             className="mt-2 w-full rounded-md border border-[var(--color-accent)] px-4 py-2 font-medium text-[var(--color-accent)] disabled:opacity-40"
           >
             Seat now
@@ -306,7 +332,7 @@ export function ReservationPanel({
         {reservation && (
           <button
             type="button"
-            onClick={() => onClear(tableNumber as number)}
+            onClick={handleClear}
             className="mt-auto rounded-md border border-[var(--color-overdue-border)] px-4 py-2 font-medium text-[var(--color-overdue-text)]"
           >
             Clear table
