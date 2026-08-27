@@ -9,13 +9,10 @@ import { FloorPlan } from "@/components/FloorPlan";
 import { ReservationDetails } from "@/components/ReservationDetails";
 
 // Read-only mirror of the admin page ("/"): same live data via the same
-// hook, same floor plan, but selecting a table opens ReservationDetails
-// instead of ReservationPanel - no add/edit/seat/clear controls anywhere
-// on this page. Unlike the admin page, the floor plan here also colors
-// each table's border by its assigned server and shows the server's name
-// on the tile (see FloorPlan's serverNames prop) - staff scans this floor
-// plan for "who has table X" more than admin does, which already shows
-// server details in its own side panel instead.
+// hook, same floor plan (including the per-server border coloring, see
+// FloorPlan's serverNames prop), but selecting a table opens
+// ReservationDetails instead of ReservationPanel - no add/edit/seat/clear
+// controls anywhere on this page.
 export default function StaffView() {
   const { reservationsByTable, isLoading, isConnected, loadError, getStatus, summary, now, retry } =
     useReservations();

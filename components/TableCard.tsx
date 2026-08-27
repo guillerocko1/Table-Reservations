@@ -29,9 +29,8 @@ interface TableCardProps {
   /** Roster order (from useServerRoster) — when given, a table with an
    *  assigned server gets that server's own border color (see
    *  SERVER_BORDER_CLASSES below) instead of the status color, and shows
-   *  the server's name on the tile. Passed by the staff view only; the
-   *  admin view omits this and keeps the plain status-colored border,
-   *  since it already shows server details in its side panel. */
+   *  the server's name on the tile. Passed by both the admin and staff
+   *  views. */
   serverNames?: string[];
   onSelect: (tableNumber: number) => void;
 }

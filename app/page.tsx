@@ -70,6 +70,7 @@ export default function Home() {
             getStatus={getStatus}
             now={now}
             onSelectTable={setSelectedTable}
+            serverNames={serverNames}
           />
 
           <ReservationPanel

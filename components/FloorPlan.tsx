@@ -9,8 +9,8 @@ interface FloorPlanProps {
   onSelectTable: (tableNumber: number) => void;
   /** Roster order (from useServerRoster) — when given, each table's border
    *  is colored by its assigned server instead of by status, and the
-   *  server's name shows on the tile. Passed by the staff view only; see
-   *  components/TableCard.tsx. */
+   *  server's name shows on the tile. Passed by both the admin and staff
+   *  views; see components/TableCard.tsx. */
   serverNames?: string[];
 }
 
