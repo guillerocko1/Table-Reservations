@@ -44,21 +44,23 @@ export function ServerTableCard({ reservation, now }: ServerTableCardProps) {
   return (
     <div className={`flex flex-col gap-1.5 rounded-lg border-2 p-3 ${colorClass}`}>
       <div className="flex items-center justify-between">
-        <span className="font-serif text-lg font-bold">Table {reservation.tableNumber}</span>
-        <span className="text-xs font-medium uppercase tracking-wide">{STATUS_LABELS[status]}</span>
+        <span className="font-serif text-xl font-bold">Table {reservation.tableNumber}</span>
+        <span className="text-sm font-medium uppercase tracking-wide">{STATUS_LABELS[status]}</span>
       </div>
-      <p className="text-sm font-semibold">
+      <p className="text-base font-semibold">
         {reservation.tags.length > 0 && "★ "}
         {reservation.guestName} · {reservation.partySize}
       </p>
-      {reservation.celebration !== "None" && <p className="text-xs">{reservation.celebration}</p>}
-      {reservation.allergies && <p className="text-xs">Allergies: {reservation.allergies}</p>}
+      {reservation.celebration !== "None" && <p className="text-sm">{reservation.celebration}</p>}
+      {reservation.allergies && <p className="text-sm">Allergies: {reservation.allergies}</p>}
+      {/* Final time / minutes left get the same big, bold emphasis they get
+          in ReservationDetails — the one number staff scan for fastest. */}
       {reservation.finalTime ? (
-        <p className="text-sm font-semibold">
+        <p className="text-xl font-bold">
           {minutesUntil(reservation.finalTime, now)} min left · final {formatTime12Hour(reservation.finalTime)}
         </p>
       ) : (
-        <p className="text-xs">Not seated yet · booked {formatTime12Hour(reservation.reservationTime)}</p>
+        <p className="text-sm">Not seated yet · booked {formatTime12Hour(reservation.reservationTime)}</p>
       )}
     </div>
   );
