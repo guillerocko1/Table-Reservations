@@ -57,7 +57,7 @@ export default function ByServerView() {
         <div className="flex flex-col gap-6">
           {groups.map((group) => (
             <section key={group.serverName} className="flex flex-col gap-3">
-              <h2 className="font-serif text-xl font-semibold text-[var(--color-text)]">
+              <h2 className="font-serif text-xl font-semibold text-blue-900">
                 {group.serverName}{" "}
                 <span className="text-sm font-normal text-[var(--color-text-muted)]">
                   ({group.reservations.length} table{group.reservations.length === 1 ? "" : "s"})
