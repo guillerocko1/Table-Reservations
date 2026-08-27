@@ -4,6 +4,7 @@ import {
   colorTierFor,
   computeFinalTime,
   formatTime12Hour,
+  groupReservationsByServer,
   minutesSince,
   minutesUntil,
   statusFor,
@@ -311,6 +312,78 @@ test("minutesSince: clamps to zero for a start time later than now", () => {
   const now = new Date();
   now.setHours(18, 0, 0, 0);
   assert.equal(minutesSince("18:30", now), 0);
+});
+
+test("groupReservationsByServer: skips tables with no server assigned", () => {
+  const reservationsByTable: Record<number, Reservation> = {
+    5: makeReservation({ tableNumber: 5, serverName: "" }),
+    6: makeReservation({ tableNumber: 6, serverName: "Jamie" }),
+  };
+  const groups = groupReservationsByServer(reservationsByTable, ["Jamie"]);
+  assert.deepEqual(
+    groups.map((g) => g.serverName),
+    ["Jamie"],
+  );
+  assert.equal(groups[0].reservations.length, 1);
+  assert.equal(groups[0].reservations[0].tableNumber, 6);
+});
+
+test("groupReservationsByServer: sorts a server's own tables by table number", () => {
+  const reservationsByTable: Record<number, Reservation> = {
+    12: makeReservation({ tableNumber: 12, serverName: "Jamie" }),
+    3: makeReservation({ tableNumber: 3, serverName: "Jamie" }),
+    7: makeReservation({ tableNumber: 7, serverName: "Jamie" }),
+  };
+  const groups = groupReservationsByServer(reservationsByTable, ["Jamie"]);
+  assert.deepEqual(
+    groups[0].reservations.map((r) => r.tableNumber),
+    [3, 7, 12],
+  );
+});
+
+test("groupReservationsByServer: orders servers by roster slot order", () => {
+  const reservationsByTable: Record<number, Reservation> = {
+    1: makeReservation({ tableNumber: 1, serverName: "Casey" }),
+    2: makeReservation({ tableNumber: 2, serverName: "Alex" }),
+  };
+  // Roster lists Alex before Casey even though Casey's table number is
+  // lower — the roster's configured order wins, not table number or name.
+  const groups = groupReservationsByServer(reservationsByTable, ["Alex", "Casey"]);
+  assert.deepEqual(
+    groups.map((g) => g.serverName),
+    ["Alex", "Casey"],
+  );
+});
+
+test("groupReservationsByServer: a server with no tables right now doesn't appear", () => {
+  const reservationsByTable: Record<number, Reservation> = {
+    1: makeReservation({ tableNumber: 1, serverName: "Alex" }),
+  };
+  const groups = groupReservationsByServer(reservationsByTable, ["Alex", "Casey", "", "", ""]);
+  assert.deepEqual(
+    groups.map((g) => g.serverName),
+    ["Alex"],
+  );
+});
+
+test("groupReservationsByServer: a server name not in the roster still appears, after roster names, alphabetically", () => {
+  const reservationsByTable: Record<number, Reservation> = {
+    1: makeReservation({ tableNumber: 1, serverName: "Zara" }),
+    2: makeReservation({ tableNumber: 2, serverName: "Alex" }),
+    3: makeReservation({ tableNumber: 3, serverName: "Morgan" }),
+  };
+  // Only Alex is on the current roster (e.g. Zara and Morgan served under a
+  // roster slot that's since been renamed) — Alex still sorts first, then
+  // the non-roster names alphabetically.
+  const groups = groupReservationsByServer(reservationsByTable, ["Alex"]);
+  assert.deepEqual(
+    groups.map((g) => g.serverName),
+    ["Alex", "Morgan", "Zara"],
+  );
+});
+
+test("groupReservationsByServer: empty input produces no groups", () => {
+  assert.deepEqual(groupReservationsByServer({}, ["Alex", "Casey"]), []);
 });
 
 test("summarizeStatuses counts every table into exactly one bucket", () => {

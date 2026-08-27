@@ -38,12 +38,14 @@ export default function Home() {
             </p>
           )}
         </div>
-        <Link
-          href="/staff"
-          className="whitespace-nowrap text-sm font-medium text-[var(--color-accent)] underline"
-        >
-          View as staff →
-        </Link>
+        <div className="flex shrink-0 flex-col items-end gap-1 text-sm">
+          <Link href="/staff" className="whitespace-nowrap font-medium text-[var(--color-accent)] underline">
+            View as staff →
+          </Link>
+          <Link href="/by-server" className="whitespace-nowrap font-medium text-[var(--color-accent)] underline">
+            By server →
+          </Link>
+        </div>
       </header>
 
       {loadError ? (

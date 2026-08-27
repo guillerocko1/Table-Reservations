@@ -29,12 +29,14 @@ export default function StaffView() {
             </p>
           )}
         </div>
-        <Link
-          href="/"
-          className="whitespace-nowrap text-sm font-medium text-[var(--color-accent)] underline"
-        >
-          Admin view →
-        </Link>
+        <div className="flex shrink-0 flex-col items-end gap-1 text-sm">
+          <Link href="/" className="whitespace-nowrap font-medium text-[var(--color-accent)] underline">
+            Admin view →
+          </Link>
+          <Link href="/by-server" className="whitespace-nowrap font-medium text-[var(--color-accent)] underline">
+            By server →
+          </Link>
+        </div>
       </header>
 
       {loadError ? (

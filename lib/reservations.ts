@@ -201,3 +201,45 @@ export function summarizeStatuses(
   }
   return summary;
 }
+
+export interface ServerGroup {
+  serverName: string;
+  reservations: Reservation[];
+}
+
+// Groups reservations by their assigned server for the "by server" view.
+// Tables with no server picked are skipped entirely (no "Unassigned"
+// bucket), and a server with nothing currently assigned just doesn't
+// appear — this only ever lists servers who actually have tables right
+// now. Groups are ordered to match the roster's slot order first, so the
+// list reads in the order the admin set the roster up in; any server name
+// that isn't a current roster slot (e.g. a renamed or removed slot whose
+// reservations still carry the old name) is grouped separately, sorted
+// alphabetically, after the roster names. Within a server's group, tables
+// are sorted by table number.
+export function groupReservationsByServer(
+  reservationsByTable: Record<number, Reservation>,
+  rosterOrder: string[],
+): ServerGroup[] {
+  const byServer = new Map<string, Reservation[]>();
+  for (const reservation of Object.values(reservationsByTable)) {
+    if (!reservation.serverName) continue;
+    const existing = byServer.get(reservation.serverName) ?? [];
+    existing.push(reservation);
+    byServer.set(reservation.serverName, existing);
+  }
+
+  for (const reservations of byServer.values()) {
+    reservations.sort((a, b) => a.tableNumber - b.tableNumber);
+  }
+
+  const rostered = rosterOrder.filter((name) => byServer.has(name));
+  const extras = Array.from(byServer.keys())
+    .filter((name) => !rosterOrder.includes(name))
+    .sort((a, b) => a.localeCompare(b));
+
+  return [...rostered, ...extras].map((serverName) => ({
+    serverName,
+    reservations: byServer.get(serverName)!,
+  }));
+}
