@@ -1,7 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// .trim() guards against a trailing newline or space from pasting the value
+// into a dashboard field (e.g. Vercel's env var UI) — REST calls tolerate
+// that extra whitespace since it rides in a header, but the realtime
+// WebSocket embeds the key in a URL query string and rejects the connection
+// outright if it's not an exact match.
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(
