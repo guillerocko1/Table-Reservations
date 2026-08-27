@@ -184,15 +184,15 @@ export function TableCard({
       onClick={() => onSelect(tableNumber)}
       className={`flex flex-col items-center justify-center gap-1 border-2 p-2 text-center transition hover:brightness-95 ${frameClass} ${colorClass}`}
     >
-      <span className="font-serif text-xl font-bold">{tableNumber}</span>
+      <span className="font-serif text-xl font-bold">
+        {tableNumber}
+        {reservation && reservation.tags.length > 0 && " ★"}
+      </span>
       <span className="text-[11px] font-medium uppercase tracking-wide">{STATUS_LABELS[status]}</span>
-      {reservation && (
-        <span className="truncate text-xs">
-          {reservation.tags.length > 0 && "★ "}
-          {reservation.guestName} · {reservation.partySize}
-        </span>
-      )}
-      {showServerName && <span className="truncate text-[10px] font-semibold">{serverName}</span>}
+      {/* Server name, not the guest's name — who's serving a table is what
+          staff scan the floor plan for; the guest's own details are still
+          one click away in the panel. */}
+      {showServerName && <span className="truncate text-xs font-semibold">{serverName}</span>}
       {seatedMinutes !== null && (
         <span className="text-[10px] font-semibold text-[var(--color-text-muted)]">{seatedMinutes} min</span>
       )}
