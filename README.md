@@ -58,18 +58,14 @@ npm run build       # production build
 
 ## Deployment
 
-Pushing to `main` builds the app as a static export (`next build` with
-`output: "export"`) and publishes it to GitHub Pages via
-`.github/workflows/deploy.yml`. The build step needs
-`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` available
-as GitHub Actions **repository variables** (Settings → Secrets and
-variables → Actions → Variables tab) — see `.env.example` for what they
-are. The live URL is under the repo's **Settings → Pages** once the
-first deploy finishes.
-
-The one-time setup, after pushing this repo to GitHub: go to
-**Settings → Pages → Source** and select **GitHub Actions**. After that,
-every push to `main` deploys automatically — no manual steps.
+Pushing to `main` deploys automatically via Vercel (project
+`table-reservations`, linked to this GitHub repo) — no CI config to
+maintain, Vercel builds and deploys on every push. The build needs
+`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` set as
+environment variables in the Vercel project's **Settings → Environment
+Variables** (see `.env.example` for what they are) — these are
+`NEXT_PUBLIC_*` values baked in at build time, so they must be set there,
+not just in a developer's local `.env.local`.
 
 To build the static export locally (e.g. to preview `out/` before pushing):
 
