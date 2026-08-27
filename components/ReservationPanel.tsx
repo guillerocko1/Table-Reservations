@@ -36,10 +36,9 @@ const TIME_LIMIT_LABELS: Record<TimeLimitMinutes, string> = {
   135: "2 h 15 minutes",
 };
 
-// Quick-pick choices for the party size field below — the field stays a
-// plain number input underneath (via the `list` attribute), so any value
-// outside 1-12 can still be typed directly.
-const PARTY_SIZE_OPTIONS = Array.from({ length: 12 }, (_, index) => index + 1);
+// Party size dropdown choices — anything larger switches to a plain number
+// input instead (see the "More than 15…" option below).
+const PARTY_SIZE_OPTIONS = Array.from({ length: 15 }, (_, index) => index + 1);
 
 // "HH:mm" for right now — a brand-new reservation's booked time and a
 // newly-opened table's seat time both default to the moment the admin is
@@ -78,6 +77,12 @@ export function ReservationPanel({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [draftServerNames, setDraftServerNames] = useState<string[]>(serverNames);
   const [serverNameError, setServerNameError] = useState<string | null>(null);
+  // Whether the party size field shows the 1-15 dropdown or a free-typed
+  // number — starts in dropdown mode unless the loaded reservation already
+  // has a bigger party, so a large existing reservation's real size is
+  // visible right away instead of showing a dropdown value that doesn't
+  // match it.
+  const [customPartySize, setCustomPartySize] = useState(false);
 
   useEffect(() => {
     if (reservation) {
@@ -94,9 +99,11 @@ export function ReservationPanel({
       // "Seat now" should default to right now, not the booked reservation
       // time — only fall back to the booked time once it's actually seated.
       setStartTime(reservation.startTime ?? nowHHmm());
+      setCustomPartySize(reservation.partySize > 15);
     } else {
       setInput(emptyInput());
       setStartTime(nowHHmm());
+      setCustomPartySize(false);
     }
     setErrors({});
     setSaveError(null);
@@ -221,22 +228,43 @@ export function ReservationPanel({
 
         <label className="flex flex-col gap-1 text-sm">
           Party size
-          <input
-            type="number"
-            min={1}
-            list="party-size-options"
-            className="rounded-md border border-[var(--color-border)] px-3 py-2"
-            value={input.partySize}
-            onChange={(event) => setInput({ ...input, partySize: Number(event.target.value) })}
-          />
-          {/* A dropdown of the common sizes, but still a plain number input
-              underneath — typing any value (e.g. a party of 20) still
-              works, this just adds one-click choices for the common case. */}
-          <datalist id="party-size-options">
-            {PARTY_SIZE_OPTIONS.map((size) => (
-              <option key={size} value={size} />
-            ))}
-          </datalist>
+          {customPartySize ? (
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={1}
+                className="w-full rounded-md border border-[var(--color-border)] px-3 py-2"
+                value={input.partySize}
+                onChange={(event) => setInput({ ...input, partySize: Number(event.target.value) })}
+              />
+              <button
+                type="button"
+                onClick={() => setCustomPartySize(false)}
+                className="whitespace-nowrap text-xs font-medium text-[var(--color-accent)] underline"
+              >
+                Choose from list
+              </button>
+            </div>
+          ) : (
+            <select
+              className="rounded-md border border-[var(--color-border)] px-3 py-2"
+              value={input.partySize}
+              onChange={(event) => {
+                if (event.target.value === "custom") {
+                  setCustomPartySize(true);
+                  return;
+                }
+                setInput({ ...input, partySize: Number(event.target.value) });
+              }}
+            >
+              {PARTY_SIZE_OPTIONS.map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+              <option value="custom">More than 15…</option>
+            </select>
+          )}
           {errors.partySize && <span className="text-xs text-[var(--color-overdue-text)]">{errors.partySize}</span>}
         </label>
 
