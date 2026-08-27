@@ -36,6 +36,18 @@ const TIME_LIMIT_LABELS: Record<TimeLimitMinutes, string> = {
   135: "2 h 15 minutes",
 };
 
+// Quick-pick choices for the party size field below — the field stays a
+// plain number input underneath (via the `list` attribute), so any value
+// outside 1-12 can still be typed directly.
+const PARTY_SIZE_OPTIONS = Array.from({ length: 12 }, (_, index) => index + 1);
+
+// "HH:mm" for right now — a brand-new reservation's booked time and a
+// newly-opened table's seat time both default to the moment the admin is
+// actually working in, rather than an arbitrary fixed time.
+function nowHHmm(): string {
+  return new Date().toTimeString().slice(0, 5);
+}
+
 function emptyInput(): ReservationInput {
   return {
     guestName: "",
@@ -43,7 +55,7 @@ function emptyInput(): ReservationInput {
     partySize: 2,
     celebration: "None",
     allergies: "",
-    reservationTime: "18:00",
+    reservationTime: nowHHmm(),
     timeLimitMinutes: 90,
     serverName: "",
   };
@@ -81,11 +93,10 @@ export function ReservationPanel({
       });
       // "Seat now" should default to right now, not the booked reservation
       // time — only fall back to the booked time once it's actually seated.
-      const nowHHmm = new Date().toTimeString().slice(0, 5);
-      setStartTime(reservation.startTime ?? nowHHmm);
+      setStartTime(reservation.startTime ?? nowHHmm());
     } else {
       setInput(emptyInput());
-      setStartTime("18:00");
+      setStartTime(nowHHmm());
     }
     setErrors({});
     setSaveError(null);
@@ -213,10 +224,19 @@ export function ReservationPanel({
           <input
             type="number"
             min={1}
+            list="party-size-options"
             className="rounded-md border border-[var(--color-border)] px-3 py-2"
             value={input.partySize}
             onChange={(event) => setInput({ ...input, partySize: Number(event.target.value) })}
           />
+          {/* A dropdown of the common sizes, but still a plain number input
+              underneath — typing any value (e.g. a party of 20) still
+              works, this just adds one-click choices for the common case. */}
+          <datalist id="party-size-options">
+            {PARTY_SIZE_OPTIONS.map((size) => (
+              <option key={size} value={size} />
+            ))}
+          </datalist>
           {errors.partySize && <span className="text-xs text-[var(--color-overdue-text)]">{errors.partySize}</span>}
         </label>
 
