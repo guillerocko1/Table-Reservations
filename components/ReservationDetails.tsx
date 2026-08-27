@@ -66,7 +66,11 @@ export function ReservationDetails({ tableNumber, reservation, status, now, onCl
             />
             <Detail label="Party size" value={String(reservation.partySize)} />
             <Detail label="Special celebration" value={reservation.celebration} />
-            <Detail label="Allergies / notes" value={reservation.allergies || "None noted"} />
+            <Detail
+              label="Allergies / notes"
+              value={reservation.allergies || "None noted"}
+              valueClassName="whitespace-pre-line text-lg font-semibold text-[var(--color-text)]"
+            />
             <Detail label="Reservation time" value={reservation.reservationTime} />
             {/* Start and Final time get their own colors — they're the two
                 numbers staff scan for fastest to judge how a table's doing. */}

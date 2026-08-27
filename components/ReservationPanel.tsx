@@ -77,6 +77,11 @@ export function ReservationPanel({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [draftServerNames, setDraftServerNames] = useState<string[]>(serverNames);
   const [serverNameError, setServerNameError] = useState<string | null>(null);
+  // The allergies/notes field is still stored as one string (see
+  // ReservationInput) — this is just a nicer editor on top of it: each row
+  // here becomes one line, joined with "\n" on save. Always at least one
+  // row so there's somewhere to type.
+  const [allergyRows, setAllergyRows] = useState<string[]>([""]);
   // Whether the party size field shows the 1-15 dropdown or a free-typed
   // number — starts in dropdown mode unless the loaded reservation already
   // has a bigger party, so a large existing reservation's real size is
@@ -100,10 +105,12 @@ export function ReservationPanel({
       // time — only fall back to the booked time once it's actually seated.
       setStartTime(reservation.startTime ?? nowHHmm());
       setCustomPartySize(reservation.partySize > 15);
+      setAllergyRows(reservation.allergies ? reservation.allergies.split("\n") : [""]);
     } else {
       setInput(emptyInput());
       setStartTime(nowHHmm());
       setCustomPartySize(false);
+      setAllergyRows([""]);
     }
     setErrors({});
     setSaveError(null);
@@ -133,12 +140,18 @@ export function ReservationPanel({
   if (tableNumber === null) return null;
 
   async function handleSave() {
-    const result = validateReservationInput(input);
+    // Blank rows (an empty "+ Add note" left untouched) don't become part
+    // of the saved notes.
+    const inputToSave: ReservationInput = {
+      ...input,
+      allergies: allergyRows.filter((row) => row.trim() !== "").join("\n"),
+    };
+    const result = validateReservationInput(inputToSave);
     setErrors(result.errors);
     if (!result.valid) return;
     setSaveError(null);
     try {
-      await onSave(tableNumber as number, input);
+      await onSave(tableNumber as number, inputToSave);
     } catch {
       setSaveError("Couldn't save — check your connection and try again.");
     }
@@ -283,14 +296,45 @@ export function ReservationPanel({
           </select>
         </label>
 
-        <label className="flex flex-col gap-1 text-sm">
+        <div className="flex flex-col gap-1.5 text-sm">
           Allergies / notes
-          <textarea
-            className="rounded-md border border-[var(--color-border)] px-3 py-2"
-            value={input.allergies}
-            onChange={(event) => setInput({ ...input, allergies: event.target.value })}
-          />
-        </label>
+          <div className="flex flex-col gap-1.5">
+            {allergyRows.map((row, index) => (
+              <div key={index} className="flex items-center gap-1.5">
+                <input
+                  className="flex-1 rounded-md border border-[var(--color-border)] px-3 py-2"
+                  value={row}
+                  placeholder={`Note ${index + 1}`}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setAllergyRows((current) => {
+                      const next = [...current];
+                      next[index] = value;
+                      return next;
+                    });
+                  }}
+                />
+                {allergyRows.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setAllergyRows((current) => current.filter((_, i) => i !== index))}
+                    aria-label={`Remove note ${index + 1}`}
+                    className="px-1 text-sm font-medium text-[var(--color-overdue-text)]"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setAllergyRows((current) => [...current, ""])}
+              className="self-start text-xs font-medium text-[var(--color-accent)] underline"
+            >
+              + Add note
+            </button>
+          </div>
+        </div>
 
         <label className="flex flex-col gap-1 text-sm">
           Reservation time
