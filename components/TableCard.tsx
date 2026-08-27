@@ -26,23 +26,48 @@ interface TableCardProps {
   /** Tables 34 and 44 — wider than the standard table frame (same height,
    *  more width), for tables that seat more people. */
   wide?: boolean;
+  /** Roster order (from useServerRoster) — when given, a table with an
+   *  assigned server gets that server's own border color (see
+   *  SERVER_BORDER_CLASSES below) instead of the status color, and shows
+   *  the server's name on the tile. Passed by the staff view only; the
+   *  admin view omits this and keeps the plain status-colored border,
+   *  since it already shows server details in its side panel. */
+  serverNames?: string[];
   onSelect: (tableNumber: number) => void;
 }
 
-// Keyed by color TIER, not status — "warning" (30 min or less left) sits
-// between Occupied and Overdue's colors without changing what a table's
-// status LABEL says (see STATUS_LABELS below, still keyed by status).
-const COLOR_TIER_STYLES: Record<ColorTier, string> = {
-  available:
-    "bg-[var(--color-available-bg)] border-[var(--color-available-border)] text-[var(--color-available-text)]",
-  reserved:
-    "bg-[var(--color-reserved-bg)] border-[var(--color-reserved-border)] text-[var(--color-reserved-text)]",
-  occupied:
-    "bg-[var(--color-occupied-bg)] border-[var(--color-occupied-border)] text-[var(--color-occupied-text)]",
-  warning: "bg-[var(--color-warning-bg)] border-[var(--color-warning-border)] text-[var(--color-warning-text)]",
-  overdue:
-    "bg-[var(--color-overdue-bg)] border-[var(--color-overdue-border)] text-[var(--color-overdue-text)]",
+// Fill and text stay keyed by color TIER regardless of server coloring —
+// "warning" (30 min or less left) sits between Occupied and Overdue's
+// colors without changing what a table's status LABEL says (see
+// STATUS_LABELS below, still keyed by status). Border is separate (below)
+// so a server's color can override just the border while the fill still
+// shows status/urgency at a glance.
+const COLOR_TIER_FILL: Record<ColorTier, string> = {
+  available: "bg-[var(--color-available-bg)] text-[var(--color-available-text)]",
+  reserved: "bg-[var(--color-reserved-bg)] text-[var(--color-reserved-text)]",
+  occupied: "bg-[var(--color-occupied-bg)] text-[var(--color-occupied-text)]",
+  warning: "bg-[var(--color-warning-bg)] text-[var(--color-warning-text)]",
+  overdue: "bg-[var(--color-overdue-bg)] text-[var(--color-overdue-text)]",
 };
+
+const COLOR_TIER_BORDER: Record<ColorTier, string> = {
+  available: "border-[var(--color-available-border)]",
+  reserved: "border-[var(--color-reserved-border)]",
+  occupied: "border-[var(--color-occupied-border)]",
+  warning: "border-[var(--color-warning-border)]",
+  overdue: "border-[var(--color-overdue-border)]",
+};
+
+// One color per roster slot (up to MAX_SERVERS, see lib/serverRows.ts) —
+// deliberately outside the green/blue/blue-gray/gold/red status palette
+// above, so a server's color is never mistaken for an urgency signal.
+const SERVER_BORDER_CLASSES = [
+  "border-purple-500",
+  "border-teal-500",
+  "border-pink-500",
+  "border-indigo-500",
+  "border-cyan-600",
+];
 
 const STATUS_LABELS: Record<ReservationStatus, string> = {
   available: "Available",
@@ -97,6 +122,7 @@ export function TableCard({
   twoTop,
   mediumWide,
   wide,
+  serverNames,
   onSelect,
 }: TableCardProps) {
   // Only a seated table has a start time to count from — Available/Reserved
@@ -106,12 +132,17 @@ export function TableCard({
       ? minutesSince(reservation.startTime, now)
       : null;
 
-  const colorClass = COLOR_TIER_STYLES[colorTierFor(status, reservation, now)];
+  const tier = colorTierFor(status, reservation, now);
+  const serverName = reservation?.serverName;
+  const serverIndex = serverNames && serverName ? serverNames.indexOf(serverName) : -1;
+  const showServerName = Boolean(serverNames) && Boolean(serverName);
+  const borderClass = serverIndex >= 0 ? SERVER_BORDER_CLASSES[serverIndex] : COLOR_TIER_BORDER[tier];
+  const colorClass = `${COLOR_TIER_FILL[tier]} ${borderClass}`;
 
   const title = reservation
     ? `Table ${tableNumber} · ${STATUS_LABELS[status]} · ${reservation.guestName} · ${reservation.partySize}${
         reservation.tags.length > 0 ? ` · ${reservation.tags.join(", ")}` : ""
-      }${seatedMinutes !== null ? ` · seated ${seatedMinutes} min` : ""}`
+      }${seatedMinutes !== null ? ` · seated ${seatedMinutes} min` : ""}${showServerName ? ` · ${serverName}` : ""}`
     : `Table ${tableNumber} · ${STATUS_LABELS[status]}`;
 
   if (shape === "seat") {
@@ -125,9 +156,13 @@ export function TableCard({
         className={`flex flex-col items-center justify-center gap-0.5 border-2 text-center transition hover:brightness-95 ${seatFrame} ${colorClass}`}
       >
         <span className={`font-serif font-bold ${small ? "text-[10px]" : "text-sm"}`}>{tableNumber}</span>
-        {/* A 40px circle can't fit a second line legibly — full details
-            (including seated minutes) are still one click or hover away. */}
-        {!small && seatedMinutes !== null && <span className="text-[9px] font-semibold">{seatedMinutes}m</span>}
+        {/* A 40px circle can't fit a third line legibly — server name takes
+            priority over the seated-minutes counter when both would apply,
+            full details are still one click or hover away either way. */}
+        {!small && showServerName && <span className="max-w-full truncate text-[9px] font-semibold">{serverName}</span>}
+        {!small && !showServerName && seatedMinutes !== null && (
+          <span className="text-[9px] font-semibold">{seatedMinutes}m</span>
+        )}
       </button>
     );
   }
@@ -158,6 +193,7 @@ export function TableCard({
           {reservation.guestName} · {reservation.partySize}
         </span>
       )}
+      {showServerName && <span className="truncate text-[10px] font-semibold">{serverName}</span>}
       {seatedMinutes !== null && (
         <span className="text-[10px] font-semibold text-[var(--color-text-muted)]">{seatedMinutes} min</span>
       )}
