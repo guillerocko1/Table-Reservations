@@ -72,10 +72,9 @@ export function ServerTableCard({ reservation, now, serverNames }: ServerTableCa
         <span className="font-serif text-xl font-bold">Table {reservation.tableNumber}</span>
         <span className="text-sm font-medium uppercase tracking-wide">{STATUS_LABELS[status]}</span>
       </div>
-      <p className="text-base font-semibold">
-        {reservation.tags.length > 0 && "★ "}
-        {reservation.guestName} · {reservation.partySize}
-      </p>
+      <p className="text-base font-semibold">{reservation.guestName}</p>
+      {reservation.tags.length > 0 && <p className="text-sm">★ Guest Tags: {reservation.tags.join(", ")}</p>}
+      <p className="text-sm">Party Size: {reservation.partySize}</p>
       {reservation.celebration !== "None" && <p className="text-sm">{reservation.celebration}</p>}
       {reservation.allergies && <p className="text-sm">Allergies: {reservation.allergies}</p>}
       {/* Final time / minutes left get the same big, bold emphasis they get
