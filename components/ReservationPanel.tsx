@@ -192,16 +192,6 @@ export function ReservationPanel({
           </button>
         </div>
 
-        <label className="flex flex-col gap-1 text-sm">
-          Guest name
-          <input
-            className="rounded-md border border-[var(--color-border)] px-3 py-2"
-            value={input.guestName}
-            onChange={(event) => setInput({ ...input, guestName: event.target.value })}
-          />
-          {errors.guestName && <span className="text-xs text-[var(--color-overdue-text)]">{errors.guestName}</span>}
-        </label>
-
         <div className="flex flex-col gap-1.5 text-sm">
           Guest tags
           <div className="flex flex-wrap gap-1.5">
@@ -284,25 +274,12 @@ export function ReservationPanel({
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          Allergies / notes
+          Visit Notes
           <textarea
             className="rounded-md border border-[var(--color-border)] px-3 py-2"
             value={input.allergies}
             onChange={(event) => setInput({ ...input, allergies: event.target.value })}
           />
-        </label>
-
-        <label className="flex flex-col gap-1 text-sm">
-          Reservation time
-          <input
-            type="time"
-            className="rounded-md border border-[var(--color-border)] px-3 py-2"
-            value={input.reservationTime}
-            onChange={(event) => setInput({ ...input, reservationTime: event.target.value })}
-          />
-          {errors.reservationTime && (
-            <span className="text-xs text-[var(--color-overdue-text)]">{errors.reservationTime}</span>
-          )}
         </label>
 
         <label className="flex flex-col gap-1 text-sm">

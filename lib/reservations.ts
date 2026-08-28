@@ -173,9 +173,8 @@ export function validateReservationInput(
 ): { valid: boolean; errors: Partial<Record<keyof ReservationInput, string>> } {
   const errors: Partial<Record<keyof ReservationInput, string>> = {};
 
-  if (!input.guestName.trim()) {
-    errors.guestName = "Guest name is required.";
-  }
+  // Guest name is no longer collected on the admin form (see
+  // ReservationPanel), so it's no longer required here either.
   if (!Number.isInteger(input.partySize) || input.partySize < 1) {
     errors.partySize = "Party size must be a whole number of at least 1.";
   }

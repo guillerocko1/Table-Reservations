@@ -130,7 +130,7 @@ test("validateReservationInput: valid input has no errors", () => {
   assert.deepEqual(result.errors, {});
 });
 
-test("validateReservationInput: rejects missing guest name", () => {
+test("validateReservationInput: guest name is optional (the admin form no longer collects it)", () => {
   const result = validateReservationInput({
     guestName: "   ",
     tags: [],
@@ -141,8 +141,8 @@ test("validateReservationInput: rejects missing guest name", () => {
     timeLimitMinutes: 60,
     serverName: "",
   });
-  assert.equal(result.valid, false);
-  assert.ok(result.errors.guestName);
+  assert.equal(result.valid, true);
+  assert.equal(result.errors.guestName, undefined);
 });
 
 test("validateReservationInput: rejects zero or fractional party size", () => {
