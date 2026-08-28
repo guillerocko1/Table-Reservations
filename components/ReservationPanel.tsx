@@ -192,6 +192,15 @@ export function ReservationPanel({
           </button>
         </div>
 
+        <label className="flex flex-col gap-1 text-sm">
+          Guest name
+          <input
+            className="rounded-md border border-[var(--color-border)] px-3 py-2"
+            value={input.guestName}
+            onChange={(event) => setInput({ ...input, guestName: event.target.value })}
+          />
+        </label>
+
         <div className="flex flex-col gap-1.5 text-sm">
           Guest tags
           <div className="flex flex-wrap gap-1.5">
