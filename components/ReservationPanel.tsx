@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   validateReservationInput,
+  formatHHmm,
   formatTime12Hour,
   GUEST_TAGS,
   type Celebration,
@@ -18,7 +19,6 @@ interface ReservationPanelProps {
   serverNames: string[];
   onSetServerName: (index: number, name: string) => Promise<void>;
   onSave: (tableNumber: number, input: ReservationInput) => Promise<void>;
-  onSeat: (tableNumber: number, startTime: string) => Promise<void>;
   onClear: (tableNumber: number) => Promise<void>;
   onClose: () => void;
 }
@@ -40,11 +40,11 @@ const TIME_LIMIT_LABELS: Record<TimeLimitMinutes, string> = {
 // input instead (see the "More than 15…" option below).
 const PARTY_SIZE_OPTIONS = Array.from({ length: 15 }, (_, index) => index + 1);
 
-// "HH:mm" for right now — a brand-new reservation's booked time and a
-// newly-opened table's seat time both default to the moment the admin is
-// actually working in, rather than an arbitrary fixed time.
+// "HH:mm" for right now — a brand-new reservation's booked time defaults
+// to the moment the admin is actually working in, rather than an
+// arbitrary fixed time.
 function nowHHmm(): string {
-  return new Date().toTimeString().slice(0, 5);
+  return formatHHmm(new Date());
 }
 
 function emptyInput(): ReservationInput {
@@ -66,12 +66,10 @@ export function ReservationPanel({
   serverNames,
   onSetServerName,
   onSave,
-  onSeat,
   onClear,
   onClose,
 }: ReservationPanelProps) {
   const [input, setInput] = useState<ReservationInput>(emptyInput);
-  const [startTime, setStartTime] = useState("18:00");
   const [errors, setErrors] = useState<ReturnType<typeof validateReservationInput>["errors"]>({});
   const [editingServerList, setEditingServerList] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -96,13 +94,9 @@ export function ReservationPanel({
         timeLimitMinutes: reservation.timeLimitMinutes,
         serverName: reservation.serverName,
       });
-      // "Seat now" should default to right now, not the booked reservation
-      // time — only fall back to the booked time once it's actually seated.
-      setStartTime(reservation.startTime ?? nowHHmm());
       setCustomPartySize(reservation.partySize > 15);
     } else {
       setInput(emptyInput());
-      setStartTime(nowHHmm());
       setCustomPartySize(false);
     }
     setErrors({});
@@ -132,6 +126,10 @@ export function ReservationPanel({
 
   if (tableNumber === null) return null;
 
+  // One button does both jobs: saving a table that isn't seated yet also
+  // seats it as of right now (see updateReservationFields's seatAt
+  // parameter) — editing an already-seated table's details just saves,
+  // since it already has a startTime that seatAt won't override.
   async function handleSave() {
     const result = validateReservationInput(input);
     setErrors(result.errors);
@@ -140,16 +138,11 @@ export function ReservationPanel({
     try {
       await onSave(tableNumber as number, input);
     } catch {
-      setSaveError("Couldn't save — check your connection and try again.");
-    }
-  }
-
-  async function handleSeat() {
-    setSaveError(null);
-    try {
-      await onSeat(tableNumber as number, startTime);
-    } catch {
-      setSaveError("Couldn't seat this table — check your connection and try again.");
+      setSaveError(
+        reservation?.startTime
+          ? "Couldn't save — check your connection and try again."
+          : "Couldn't seat this table — check your connection and try again.",
+      );
     }
   }
 
@@ -371,39 +364,16 @@ export function ReservationPanel({
           onClick={handleSave}
           className="rounded-md bg-[var(--color-accent)] px-4 py-2 font-medium text-white hover:bg-[var(--color-accent-hover)]"
         >
-          {reservation ? "Save changes" : "Add reservation"}
+          {reservation?.startTime ? "Save changes" : "Seat now"}
         </button>
 
         {saveError && <p className="text-sm text-[var(--color-overdue-text)]">{saveError}</p>}
 
-        <div className="border-t border-[var(--color-border)] pt-4">
-          <label className="flex flex-col gap-1 text-sm">
-            Start time (when seated)
-            <input
-              type="time"
-              className="rounded-md border border-[var(--color-border)] px-3 py-2"
-              value={startTime}
-              onChange={(event) => setStartTime(event.target.value)}
-            />
-          </label>
-          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-            Final time is calculated automatically as start time + time limit.
+        {reservation?.finalTime && (
+          <p className="text-lg font-semibold text-[var(--color-overdue-text)]">
+            Final time: {formatTime12Hour(reservation.finalTime)}
           </p>
-          {reservation?.finalTime && (
-            <p className="mt-1 text-lg font-semibold text-[var(--color-overdue-text)]">
-              Final time: {formatTime12Hour(reservation.finalTime)}
-            </p>
-          )}
-
-          <button
-            type="button"
-            disabled={!reservation}
-            onClick={handleSeat}
-            className="mt-2 w-full rounded-md border border-[var(--color-accent)] px-4 py-2 font-medium text-[var(--color-accent)] disabled:opacity-40"
-          >
-            Seat now
-          </button>
-        </div>
+        )}
 
         {reservation && (
           <button

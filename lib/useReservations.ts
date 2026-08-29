@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  computeFinalTime,
+  formatHHmm,
   statusFor,
   summarizeStatuses,
   updateReservationFields,
@@ -30,7 +30,6 @@ export interface UseReservationsResult {
   getStatus: (tableNumber: number) => ReservationStatus;
   summary: StatusSummary;
   saveReservation: (tableNumber: number, input: ReservationInput) => Promise<void>;
-  seatTable: (tableNumber: number, startTime: string) => Promise<void>;
   clearTable: (tableNumber: number) => Promise<void>;
   retry: () => void;
 }
@@ -89,11 +88,14 @@ export function useReservations(): UseReservationsResult {
   // Each mutation applies its change to local state immediately (so the
   // initiating device feels instant) and rolls back if the Supabase write
   // fails - the caller (ReservationPanel) catches the rethrown error to
-  // show an inline message.
+  // show an inline message. Saving always tries to seat the table as of
+  // right now — updateReservationFields only actually applies that seatAt
+  // when the table isn't already seated, so editing an occupied table's
+  // details doesn't reset its clock (see lib/reservations.ts).
   const saveReservation = useCallback(
     async (tableNumber: number, input: ReservationInput) => {
       const existing = reservationsByTable[tableNumber];
-      const reservation = updateReservationFields(existing, tableNumber, input);
+      const reservation = updateReservationFields(existing, tableNumber, input, formatHHmm(now));
       setReservationsByTable((current) => ({ ...current, [tableNumber]: reservation }));
       try {
         await upsertReservation(reservation);
@@ -110,27 +112,7 @@ export function useReservations(): UseReservationsResult {
         throw error;
       }
     },
-    [reservationsByTable],
-  );
-
-  const seatTable = useCallback(
-    async (tableNumber: number, startTime: string) => {
-      const existing = reservationsByTable[tableNumber];
-      if (!existing) return;
-      const updated: Reservation = {
-        ...existing,
-        startTime,
-        finalTime: computeFinalTime(startTime, existing.timeLimitMinutes),
-      };
-      setReservationsByTable((current) => ({ ...current, [tableNumber]: updated }));
-      try {
-        await upsertReservation(updated);
-      } catch (error) {
-        setReservationsByTable((current) => ({ ...current, [tableNumber]: existing }));
-        throw error;
-      }
-    },
-    [reservationsByTable],
+    [reservationsByTable, now],
   );
 
   const clearTable = useCallback(
@@ -169,7 +151,6 @@ export function useReservations(): UseReservationsResult {
     getStatus: (tableNumber: number) => statusFor(reservationsByTable[tableNumber], now),
     summary,
     saveReservation,
-    seatTable,
     clearTable,
     retry,
   };

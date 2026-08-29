@@ -86,6 +86,14 @@ export function computeFinalTime(startTime: string, timeLimitMinutes: TimeLimitM
   return minutesToTime(timeToMinutes(startTime) + timeLimitMinutes);
 }
 
+// Formats a Date as a 24-hour "HH:mm" string, zero-padded — the same
+// format startTime/reservationTime/finalTime use everywhere in this
+// module. Used to seat a table "now" without asking the caller to build
+// the string by hand.
+export function formatHHmm(date: Date): string {
+  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+}
+
 // Formats a 24-hour "HH:mm" string for display as 12-hour with AM/PM, e.g.
 // "20:00" -> "8:00 PM", "00:00" -> "12:00 AM", "12:30" -> "12:30 PM". Purely
 // a display concern — stored/compared times stay 24-hour "HH:mm" everywhere
@@ -99,15 +107,19 @@ export function formatTime12Hour(time: string): string {
 
 // Builds the next Reservation record for a save: form fields always come
 // from `input`, but `startTime` carries over from `existing` (a table isn't
-// seated just because its details were edited), and `finalTime` must be
+// re-seated just because its details were edited), and `finalTime` must be
 // re-derived from `timeLimitMinutes` every time since the caller may have
-// just changed it on an already-seated table.
+// just changed it on an already-seated table. `seatAt`, when given, seats
+// a table that isn't already seated as part of this same save (the admin
+// form's single Save/Seat button) — it's ignored once a table already has
+// a startTime, since editing details shouldn't reset a table's clock.
 export function updateReservationFields(
   existing: Reservation | undefined,
   tableNumber: number,
   input: ReservationInput,
+  seatAt?: string,
 ): Reservation {
-  const startTime = existing?.startTime ?? null;
+  const startTime = existing?.startTime ?? seatAt ?? null;
   return {
     tableNumber,
     guestName: input.guestName,

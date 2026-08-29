@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   colorTierFor,
   computeFinalTime,
+  formatHHmm,
   formatTime12Hour,
   groupReservationsByServer,
   minutesSince,
@@ -47,6 +48,20 @@ test("formatTime12Hour: converts 24-hour HH:mm to 12-hour with AM/PM", () => {
   assert.equal(formatTime12Hour("13:15"), "1:15 PM");
   assert.equal(formatTime12Hour("20:00"), "8:00 PM");
   assert.equal(formatTime12Hour("23:45"), "11:45 PM");
+});
+
+test("formatHHmm: formats a Date as 24-hour HH:mm, zero-padded", () => {
+  const morning = new Date();
+  morning.setHours(8, 5, 0, 0);
+  assert.equal(formatHHmm(morning), "08:05");
+
+  const evening = new Date();
+  evening.setHours(20, 0, 0, 0);
+  assert.equal(formatHHmm(evening), "20:00");
+
+  const midnight = new Date();
+  midnight.setHours(0, 0, 0, 0);
+  assert.equal(formatHHmm(midnight), "00:00");
 });
 
 test("statusFor: no reservation is available", () => {
@@ -256,6 +271,28 @@ test("updateReservationFields: carries guest tags through from input", () => {
 test("updateReservationFields: carries server name through from input", () => {
   const result = updateReservationFields(undefined, 1, makeInput({ serverName: "Jordan" }));
   assert.equal(result.serverName, "Jordan");
+});
+
+test("updateReservationFields: seatAt seats a brand-new reservation immediately", () => {
+  const result = updateReservationFields(undefined, 1, makeInput({ timeLimitMinutes: 90 }), "18:00");
+  assert.equal(result.startTime, "18:00");
+  assert.equal(result.finalTime, "19:30");
+});
+
+test("updateReservationFields: seatAt seats a reserved-but-unseated table", () => {
+  const existing = makeReservation({ startTime: null, finalTime: null, timeLimitMinutes: 60 });
+  const result = updateReservationFields(existing, 1, makeInput({ timeLimitMinutes: 60 }), "20:00");
+  assert.equal(result.startTime, "20:00");
+  assert.equal(result.finalTime, "21:00");
+});
+
+test("updateReservationFields: seatAt is ignored once a table is already seated", () => {
+  // Editing details of a table that's already been sitting for a while
+  // must not reset its clock just because a save happened to pass seatAt.
+  const existing = makeReservation({ startTime: "17:00", finalTime: "18:30", timeLimitMinutes: 90 });
+  const result = updateReservationFields(existing, 1, makeInput({ timeLimitMinutes: 90 }), "18:45");
+  assert.equal(result.startTime, "17:00");
+  assert.equal(result.finalTime, "18:30");
 });
 
 test("GUEST_TAGS: contains exactly the twelve documented tags", () => {

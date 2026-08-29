@@ -18,7 +18,6 @@ export default function Home() {
     summary,
     now,
     saveReservation,
-    seatTable,
     clearTable,
     retry,
   } = useReservations();
@@ -79,7 +78,6 @@ export default function Home() {
             serverNames={serverNames}
             onSetServerName={setServerName}
             onSave={(tableNumber, input) => saveReservation(tableNumber, input)}
-            onSeat={(tableNumber, startTime) => seatTable(tableNumber, startTime)}
             onClear={async (tableNumber) => {
               await clearTable(tableNumber);
               setSelectedTable(null);
