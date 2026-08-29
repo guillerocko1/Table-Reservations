@@ -74,9 +74,9 @@ export function ServerTableCard({ reservation, now, serverNames }: ServerTableCa
       </div>
       <p className="text-base font-semibold">{reservation.guestName}</p>
       {reservation.tags.length > 0 && <p className="text-sm">★ Guest Tags: {reservation.tags.join(", ")}</p>}
-      <p className="text-sm">Party Size: {reservation.partySize}</p>
-      {reservation.celebration !== "None" && <p className="text-sm">{reservation.celebration}</p>}
-      {reservation.allergies && <p className="text-sm">Visit Notes: {reservation.allergies}</p>}
+      <p className="text-base">Party Size: {reservation.partySize}</p>
+      {reservation.celebration !== "None" && <p className="text-base">{reservation.celebration}</p>}
+      {reservation.allergies && <p className="text-base">Visit Notes: {reservation.allergies}</p>}
       {/* Final time / minutes left get the same big, bold emphasis they get
           in ReservationDetails — the one number staff scan for fastest. */}
       {reservation.finalTime ? (
