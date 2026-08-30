@@ -4,7 +4,9 @@ import Link from "next/link";
 import { groupReservationsByServer } from "@/lib/reservations";
 import { useReservations } from "@/lib/useReservations";
 import { useServerRoster } from "@/lib/useServerRoster";
+import { useEightySixedItems } from "@/lib/useEightySixedItems";
 import { ServerTableCard } from "@/components/ServerTableCard";
+import { EightySixBanner } from "@/components/EightySixBanner";
 
 // Read-only, shared by admin and staff alike (same live data, no editing
 // controls) — a different grouping of the same floor plan data, by server
@@ -12,6 +14,7 @@ import { ServerTableCard } from "@/components/ServerTableCard";
 export default function ByServerView() {
   const { reservationsByTable, isLoading, isConnected, loadError, now, retry } = useReservations();
   const { serverNames } = useServerRoster();
+  const { items: eightySixedItems } = useEightySixedItems();
 
   const groups = groupReservationsByServer(reservationsByTable, serverNames);
 
@@ -20,6 +23,7 @@ export default function ByServerView() {
       <header className="flex items-start justify-between gap-4">
         <div>
           <h1 className="font-serif text-3xl font-bold text-[var(--color-text)]">Elena&apos;s Restaurant - West Portal</h1>
+          <EightySixBanner items={eightySixedItems} />
           <p className="text-sm text-[var(--color-text-muted)]">Tables grouped by server</p>
           {!isLoading && !loadError && !isConnected && (
             <p className="mt-2 rounded-md bg-[var(--color-overdue-bg)] px-3 py-2 text-sm text-[var(--color-overdue-text)]">

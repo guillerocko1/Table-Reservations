@@ -4,9 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { useReservations } from "@/lib/useReservations";
 import { useServerRoster } from "@/lib/useServerRoster";
+import { useEightySixedItems } from "@/lib/useEightySixedItems";
 import { StatusSummary } from "@/components/StatusSummary";
 import { FloorPlan } from "@/components/FloorPlan";
 import { ReservationDetails } from "@/components/ReservationDetails";
+import { EightySixBanner } from "@/components/EightySixBanner";
 
 // Read-only mirror of the admin page ("/"): same live data via the same
 // hook, same floor plan (including the per-server border coloring, see
@@ -17,6 +19,7 @@ export default function StaffView() {
   const { reservationsByTable, isLoading, isConnected, loadError, getStatus, summary, now, retry } =
     useReservations();
   const { serverNames } = useServerRoster();
+  const { items: eightySixedItems } = useEightySixedItems();
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
 
   return (
@@ -24,6 +27,7 @@ export default function StaffView() {
       <header className="flex items-start justify-between gap-4">
         <div>
           <h1 className="font-serif text-3xl font-bold text-[var(--color-text)]">Elena&apos;s Restaurant - West Portal</h1>
+          <EightySixBanner items={eightySixedItems} />
           <p className="text-sm text-[var(--color-text-muted)]">Staff view — click a table to see its details</p>
           {!isLoading && !loadError && !isConnected && (
             <p className="mt-2 rounded-md bg-[var(--color-overdue-bg)] px-3 py-2 text-sm text-[var(--color-overdue-text)]">

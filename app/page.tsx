@@ -4,9 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { useReservations } from "@/lib/useReservations";
 import { useServerRoster } from "@/lib/useServerRoster";
+import { useEightySixedItems } from "@/lib/useEightySixedItems";
 import { StatusSummary } from "@/components/StatusSummary";
 import { FloorPlan } from "@/components/FloorPlan";
 import { ReservationPanel } from "@/components/ReservationPanel";
+import { EightySixBanner } from "@/components/EightySixBanner";
+import { EightySixManager } from "@/components/EightySixManager";
 
 export default function Home() {
   const {
@@ -22,6 +25,8 @@ export default function Home() {
     retry,
   } = useReservations();
   const { serverNames, setServerName } = useServerRoster();
+  const { items: eightySixedItems, addItem: addEightySixedItem, removeItem: removeEightySixedItem } =
+    useEightySixedItems();
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
 
   return (
@@ -29,6 +34,7 @@ export default function Home() {
       <header className="flex items-start justify-between gap-4">
         <div>
           <h1 className="font-serif text-3xl font-bold text-[var(--color-text)]">Elena&apos;s Restaurant - West Portal</h1>
+          <EightySixBanner items={eightySixedItems} />
           <p className="text-sm text-[var(--color-text-muted)]">Bar and main dining floor plan</p>
           {!isLoading && !loadError && !isConnected && (
             <p className="mt-2 rounded-md bg-[var(--color-overdue-bg)] px-3 py-2 text-sm text-[var(--color-overdue-text)]">
@@ -46,6 +52,8 @@ export default function Home() {
           </Link>
         </div>
       </header>
+
+      <EightySixManager items={eightySixedItems} onAdd={addEightySixedItem} onRemove={removeEightySixedItem} />
 
       {loadError ? (
         <div className="rounded-md border border-[var(--color-overdue-border)] bg-[var(--color-overdue-bg)] p-4 text-[var(--color-overdue-text)]">

@@ -26,6 +26,16 @@ create table if not exists servers (
   name       text not null default ''
 );
 
+-- 86'd dishes: restaurant-wide, not tied to any table/reservation. A row
+-- exists for as long as the dish is 86'd; removing it (once restocked) is
+-- a plain delete, same "gone means not 86'd" model reservations uses for
+-- an empty table.
+create table if not exists eighty_sixed_items (
+  id         bigint generated always as identity primary key,
+  dish_name  text not null,
+  created_at timestamptz not null default now()
+);
+
 -- Seed the 5 fixed server-roster slots (no-op if they already exist).
 insert into servers (slot_index, name)
 values (0, ''), (1, ''), (2, ''), (3, ''), (4, '')
@@ -36,6 +46,7 @@ on conflict (slot_index) do nothing;
 -- docs/superpowers/specs/2026-08-26-realtime-multi-device-sync-design.md.
 alter table reservations enable row level security;
 alter table servers enable row level security;
+alter table eighty_sixed_items enable row level security;
 
 drop policy if exists "Allow anon full access" on reservations;
 create policy "Allow anon full access" on reservations
@@ -51,8 +62,15 @@ create policy "Allow anon full access" on servers
   using (true)
   with check (true);
 
--- Realtime: broadcast changes on both tables to subscribed clients. Wrapped
--- in existence checks so re-running this script doesn't error with
+drop policy if exists "Allow anon full access" on eighty_sixed_items;
+create policy "Allow anon full access" on eighty_sixed_items
+  for all
+  to anon
+  using (true)
+  with check (true);
+
+-- Realtime: broadcast changes on all three tables to subscribed clients.
+-- Wrapped in existence checks so re-running this script doesn't error with
 -- "relation is already member of publication".
 do $$
 begin
@@ -68,5 +86,12 @@ begin
     where pubname = 'supabase_realtime' and tablename = 'servers'
   ) then
     alter publication supabase_realtime add table servers;
+  end if;
+
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'eighty_sixed_items'
+  ) then
+    alter publication supabase_realtime add table eighty_sixed_items;
   end if;
 end $$;
