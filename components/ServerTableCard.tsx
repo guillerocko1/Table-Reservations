@@ -74,6 +74,12 @@ export function ServerTableCard({ reservation, now, serverNames }: ServerTableCa
       </div>
       <p className="text-base font-semibold">{reservation.guestName}</p>
       {reservation.tags.length > 0 && <p className="text-sm">★ Guest Tags: {reservation.tags.join(", ")}</p>}
+      {/* Rush gets its own oversized callout on top of the regular tags
+          line above — it's the one tag that needs to jump out at a glance,
+          not just be listed alongside the others. */}
+      {reservation.tags.includes("Rush") && (
+        <p className="text-2xl font-bold text-[var(--color-overdue-text)]">RUSH</p>
+      )}
       <p className="text-base">Party Size: {reservation.partySize}</p>
       {reservation.celebration !== "None" && <p className="text-base">{reservation.celebration}</p>}
       {reservation.allergies && <p className="text-base">Visit Notes: {reservation.allergies}</p>}

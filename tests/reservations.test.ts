@@ -295,7 +295,7 @@ test("updateReservationFields: seatAt is ignored once a table is already seated"
   assert.equal(result.finalTime, "18:30");
 });
 
-test("GUEST_TAGS: contains exactly the twelve documented tags", () => {
+test("GUEST_TAGS: contains exactly the thirteen documented tags", () => {
   assert.deepEqual(GUEST_TAGS, [
     "Alert the Chef",
     "Alert the Manager",
@@ -308,6 +308,7 @@ test("GUEST_TAGS: contains exactly the twelve documented tags", () => {
     "Insurance Table",
     "Investor",
     "Regular",
+    "Rush",
     "VIP",
   ]);
 });

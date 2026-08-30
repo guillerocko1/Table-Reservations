@@ -16,6 +16,7 @@ export type GuestTag =
   | "Insurance Table"
   | "Investor"
   | "Regular"
+  | "Rush"
   | "VIP";
 
 export const GUEST_TAGS: GuestTag[] = [
@@ -30,6 +31,7 @@ export const GUEST_TAGS: GuestTag[] = [
   "Insurance Table",
   "Investor",
   "Regular",
+  "Rush",
   "VIP",
 ];
 
