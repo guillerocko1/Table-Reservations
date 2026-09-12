@@ -81,7 +81,11 @@ export function ServerTableCard({ reservation, now, serverNames }: ServerTableCa
         <p className="text-2xl font-bold text-[var(--color-overdue-text)]">RUSH</p>
       )}
       <p className="text-base">Party Size: {reservation.partySize}</p>
-      {reservation.celebration !== "None" && <p className="text-base">{reservation.celebration}</p>}
+      {/* Same oversized, urgent-red treatment as RUSH above - a special
+          celebration is just as worth a server noticing at a glance. */}
+      {reservation.celebration !== "None" && (
+        <p className="text-2xl font-bold text-[var(--color-overdue-text)]">{reservation.celebration}</p>
+      )}
       {reservation.allergies && <p className="text-base">Visit Notes: {reservation.allergies}</p>}
       {/* Final time / minutes left get the same big, bold emphasis they get
           in ReservationDetails — the one number staff scan for fastest. */}
