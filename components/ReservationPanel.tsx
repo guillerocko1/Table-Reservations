@@ -12,6 +12,7 @@ import {
   type ReservationInput,
   type TimeLimitMinutes,
 } from "@/lib/reservations";
+import { KNOWN_SERVER_NAMES } from "@/lib/serverRows";
 
 interface ReservationPanelProps {
   tableNumber: number | null;
@@ -316,11 +317,10 @@ export function ReservationPanel({
           {editingServerList ? (
             <div className="flex flex-col gap-1.5 rounded-md border border-[var(--color-border)] p-2">
               {draftServerNames.map((name, index) => (
-                <input
+                <select
                   key={index}
                   className="rounded-md border border-[var(--color-border)] px-2 py-1 text-sm"
                   value={name}
-                  placeholder={`Server ${index + 1}`}
                   onChange={(event) => {
                     const value = event.target.value;
                     setDraftServerNames((current) => {
@@ -328,9 +328,23 @@ export function ReservationPanel({
                       next[index] = value;
                       return next;
                     });
+                    handleServerNameCommit(index, value);
                   }}
-                  onBlur={(event) => handleServerNameCommit(index, event.target.value)}
-                />
+                >
+                  <option value="">— empty —</option>
+                  {/* Keeps a slot's existing name selectable even if it isn't
+                      on the known-names list (typo'd or since renamed),
+                      instead of silently dropping it when this became a
+                      dropdown. */}
+                  {name !== "" && !KNOWN_SERVER_NAMES.includes(name) && (
+                    <option value={name}>{name} (custom)</option>
+                  )}
+                  {KNOWN_SERVER_NAMES.map((knownName) => (
+                    <option key={knownName} value={knownName}>
+                      {knownName}
+                    </option>
+                  ))}
+                </select>
               ))}
             </div>
           ) : (
