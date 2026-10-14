@@ -403,28 +403,35 @@ export function SpecialNotesModal({
                     </button>
                   </div>
                 ) : schedulingNoteId === item.id ? (
-                  <div className="flex items-center gap-2 rounded-md bg-[var(--color-bg)] p-1.5">
-                    <input
-                      type="datetime-local"
-                      className="flex-1 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1 text-xs shadow-sm focus:border-[var(--color-accent)] focus:outline-none"
-                      value={scheduleValue}
-                      onChange={(event) => setScheduleValue(event.target.value)}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleConfirmSchedule(item.id)}
-                      disabled={!scheduleValue}
-                      className="whitespace-nowrap rounded-md bg-[var(--color-accent)] px-2.5 py-1 text-xs font-medium text-white transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      Schedule
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSchedulingNoteId(null)}
-                      className="whitespace-nowrap px-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-                    >
-                      Cancel
-                    </button>
+                  <div className="flex flex-col gap-1.5 rounded-md bg-[var(--color-bg)] p-2">
+                    <label className="flex flex-col gap-1">
+                      <span className="text-xs font-semibold text-[var(--color-text)]">
+                        Select the date and Time
+                      </span>
+                      <input
+                        type="datetime-local"
+                        className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1 text-xs shadow-sm focus:border-[var(--color-accent)] focus:outline-none"
+                        value={scheduleValue}
+                        onChange={(event) => setScheduleValue(event.target.value)}
+                      />
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleConfirmSchedule(item.id)}
+                        disabled={!scheduleValue}
+                        className="whitespace-nowrap rounded-md bg-[var(--color-accent)] px-2.5 py-1 text-xs font-medium text-white transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Schedule
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSchedulingNoteId(null)}
+                        className="whitespace-nowrap px-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <button
