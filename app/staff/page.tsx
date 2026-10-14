@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useReservations } from "@/lib/useReservations";
 import { useServerRoster } from "@/lib/useServerRoster";
 import { useEightySixedItems } from "@/lib/useEightySixedItems";
@@ -10,6 +9,7 @@ import { StatusSummary } from "@/components/StatusSummary";
 import { FloorPlan } from "@/components/FloorPlan";
 import { ReservationDetails } from "@/components/ReservationDetails";
 import { EightySixBanner } from "@/components/EightySixBanner";
+import { NAV_BAR_CLASSNAME, NavLinkButton } from "@/components/NavLinkButton";
 
 // Read-only mirror of the admin page ("/"): same live data via the same
 // hook, same floor plan (including the per-server border coloring, see
@@ -40,14 +40,14 @@ export default function StaffView() {
             )}
           </div>
         </div>
-        <div className="flex shrink-0 flex-col items-end gap-1 text-sm">
-          <Link href="/" className="whitespace-nowrap font-medium text-[var(--color-accent)] underline">
-            Admin view →
-          </Link>
-          <Link href="/by-server" className="whitespace-nowrap font-medium text-[var(--color-accent)] underline">
-            By server →
-          </Link>
-        </div>
+        <nav className={NAV_BAR_CLASSNAME}>
+          <NavLinkButton href="/">
+            Admin view
+          </NavLinkButton>
+          <NavLinkButton href="/by-server">
+            By server
+          </NavLinkButton>
+        </nav>
       </header>
 
       {loadError ? (

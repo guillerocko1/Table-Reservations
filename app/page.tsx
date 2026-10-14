@@ -2,15 +2,19 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useReservations } from "@/lib/useReservations";
 import { useServerRoster } from "@/lib/useServerRoster";
 import { useEightySixedItems } from "@/lib/useEightySixedItems";
+import { useSpecialNotes } from "@/lib/useSpecialNotes";
+import { useEmployees } from "@/lib/useEmployees";
 import { StatusSummary } from "@/components/StatusSummary";
 import { FloorPlan } from "@/components/FloorPlan";
 import { ReservationPanel } from "@/components/ReservationPanel";
 import { EightySixBanner } from "@/components/EightySixBanner";
 import { EightySixManager } from "@/components/EightySixManager";
+import { SpecialNotesModal } from "@/components/SpecialNotesModal";
+import { NoteReminderPopup } from "@/components/NoteReminderPopup";
+import { NAV_BAR_CLASSNAME, NavLinkButton, navButtonClassName } from "@/components/NavLinkButton";
 
 export default function Home() {
   const {
@@ -28,7 +32,19 @@ export default function Home() {
   const { serverNames, setServerName } = useServerRoster();
   const { items: eightySixedItems, addItem: addEightySixedItem, removeItem: removeEightySixedItem } =
     useEightySixedItems();
+  const {
+    notes: specialNotes,
+    addNote: addSpecialNote,
+    removeNote: removeSpecialNote,
+    setNotifyAt,
+  } = useSpecialNotes();
+  const { employees, addEmployee, updateEmployee, removeEmployee } = useEmployees();
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
+  const [isSpecialNotesOpen, setIsSpecialNotesOpen] = useState(false);
+
+  // At most one shown at a time - once dismissed (notifyAt cleared), the
+  // next-due note (if any) takes its place on the following render.
+  const dueNote = specialNotes.find((note) => note.notifyAt && new Date(note.notifyAt) <= now);
 
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10">
@@ -47,14 +63,17 @@ export default function Home() {
             )}
           </div>
         </div>
-        <div className="flex shrink-0 flex-col items-end gap-1 text-sm">
-          <Link href="/staff" className="whitespace-nowrap font-medium text-[var(--color-accent)] underline">
-            View as staff →
-          </Link>
-          <Link href="/by-server" className="whitespace-nowrap font-medium text-[var(--color-accent)] underline">
-            By server →
-          </Link>
-        </div>
+        <nav className={NAV_BAR_CLASSNAME}>
+          <button type="button" onClick={() => setIsSpecialNotesOpen(true)} className={navButtonClassName}>
+            Special Notes
+          </button>
+          <NavLinkButton href="/staff">
+            View as Staff
+          </NavLinkButton>
+          <NavLinkButton href="/by-server">
+            By server
+          </NavLinkButton>
+        </nav>
       </header>
 
       <EightySixManager items={eightySixedItems} onAdd={addEightySixedItem} onRemove={removeEightySixedItem} />
@@ -88,6 +107,7 @@ export default function Home() {
             tableNumber={selectedTable}
             reservation={selectedTable !== null ? reservationsByTable[selectedTable] : undefined}
             serverNames={serverNames}
+            employeeNames={employees.map((employee) => employee.name)}
             onSetServerName={setServerName}
             onSave={(tableNumber, input) => saveReservation(tableNumber, input)}
             onClear={async (tableNumber) => {
@@ -98,6 +118,22 @@ export default function Home() {
           />
         </>
       )}
+
+      {isSpecialNotesOpen && (
+        <SpecialNotesModal
+          notes={specialNotes}
+          onAdd={addSpecialNote}
+          onRemove={removeSpecialNote}
+          onSetNotifyAt={setNotifyAt}
+          employees={employees}
+          onAddEmployee={addEmployee}
+          onUpdateEmployee={updateEmployee}
+          onRemoveEmployee={removeEmployee}
+          onClose={() => setIsSpecialNotesOpen(false)}
+        />
+      )}
+
+      {dueNote && <NoteReminderPopup note={dueNote} onDismiss={() => setNotifyAt(dueNote.id, null)} />}
     </main>
   );
 }

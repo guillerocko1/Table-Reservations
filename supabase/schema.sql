@@ -36,6 +36,50 @@ create table if not exists eighty_sixed_items (
   created_at timestamptz not null default now()
 );
 
+-- Special notes: free-form notes about an employee (date + 500-char note),
+-- restaurant-wide like eighty_sixed_items, not tied to any table. A row is
+-- kept until an admin removes it - no "resolved" state, same plain-delete
+-- model the other admin-managed lists use.
+-- notify_at: optional "pop this note up big on the Admin View at this
+-- moment" reminder, set via the note's "Send notification" control.
+-- Cleared back to null when dismissed (or never set) - same "presence
+-- means active" model eighty_sixed_items uses, just a nullable column
+-- instead of a whole row, since a note can only have one pending reminder
+-- at a time.
+create table if not exists special_notes (
+  id             bigint generated always as identity primary key,
+  note_date      date not null,
+  employee_name  text not null,
+  note           text not null check (char_length(note) <= 500),
+  notify_at      timestamptz,
+  created_at     timestamptz not null default now()
+);
+
+-- Idempotent column add for a project that already ran this file before
+-- notify_at existed.
+alter table special_notes add column if not exists notify_at timestamptz;
+
+-- The restaurant's actual employees - a real, admin-editable list (add,
+-- rename, delete) backing both the server-roster slot dropdowns and the
+-- Special Notes employee dropdown, instead of a fixed list baked into the
+-- app's code. Renaming/deleting here only changes what's offered going
+-- forward: existing reservations/servers/special_notes rows keep whatever
+-- name string they already have (same "snapshot, not a foreign key" model
+-- those already use for an off-list name).
+create table if not exists employees (
+  id         bigint generated always as identity primary key,
+  name       text not null unique,
+  created_at timestamptz not null default now()
+);
+
+-- Seed with the restaurant's current employees (no-op if already present).
+insert into employees (name)
+values
+  ('Alicia'), ('Aria'), ('Ariel'), ('Bianca'), ('Cortney'), ('Emon'),
+  ('Faby'), ('Flora'), ('Francisco'), ('Jorge'), ('Laurel'), ('Lily'),
+  ('Mariah'), ('Michelle'), ('Natasha'), ('Stevie')
+on conflict (name) do nothing;
+
 -- Seed the 5 fixed server-roster slots (no-op if they already exist).
 insert into servers (slot_index, name)
 values (0, ''), (1, ''), (2, ''), (3, ''), (4, '')
@@ -47,6 +91,8 @@ on conflict (slot_index) do nothing;
 alter table reservations enable row level security;
 alter table servers enable row level security;
 alter table eighty_sixed_items enable row level security;
+alter table special_notes enable row level security;
+alter table employees enable row level security;
 
 drop policy if exists "Allow anon full access" on reservations;
 create policy "Allow anon full access" on reservations
@@ -69,7 +115,21 @@ create policy "Allow anon full access" on eighty_sixed_items
   using (true)
   with check (true);
 
--- Realtime: broadcast changes on all three tables to subscribed clients.
+drop policy if exists "Allow anon full access" on special_notes;
+create policy "Allow anon full access" on special_notes
+  for all
+  to anon
+  using (true)
+  with check (true);
+
+drop policy if exists "Allow anon full access" on employees;
+create policy "Allow anon full access" on employees
+  for all
+  to anon
+  using (true)
+  with check (true);
+
+-- Realtime: broadcast changes on all five tables to subscribed clients.
 -- Wrapped in existence checks so re-running this script doesn't error with
 -- "relation is already member of publication".
 do $$
@@ -93,5 +153,19 @@ begin
     where pubname = 'supabase_realtime' and tablename = 'eighty_sixed_items'
   ) then
     alter publication supabase_realtime add table eighty_sixed_items;
+  end if;
+
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'special_notes'
+  ) then
+    alter publication supabase_realtime add table special_notes;
+  end if;
+
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'employees'
+  ) then
+    alter publication supabase_realtime add table employees;
   end if;
 end $$;

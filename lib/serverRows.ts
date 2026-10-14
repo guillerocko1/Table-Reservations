@@ -3,28 +3,6 @@
 // every reservation. Slots start empty - nothing to configure up front.
 export const MAX_SERVERS = 5;
 
-// The restaurant's actual servers - admin picks each slot's name from this
-// list instead of typing it, so the roster can't drift into typos/variant
-// spellings across shifts. Alphabetized for a scannable dropdown.
-export const KNOWN_SERVER_NAMES = [
-  "Alicia",
-  "Aria",
-  "Ariel",
-  "Bianca",
-  "Cortney",
-  "Emon",
-  "Faby",
-  "Flora",
-  "Francisco",
-  "Jorge",
-  "Laurel",
-  "Lily",
-  "Mariah",
-  "Michelle",
-  "Natasha",
-  "Stevie",
-];
-
 export interface ServerRow {
   slot_index: number;
   name: string;

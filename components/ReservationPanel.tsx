@@ -12,12 +12,12 @@ import {
   type ReservationInput,
   type TimeLimitMinutes,
 } from "@/lib/reservations";
-import { KNOWN_SERVER_NAMES } from "@/lib/serverRows";
 
 interface ReservationPanelProps {
   tableNumber: number | null;
   reservation: Reservation | undefined;
   serverNames: string[];
+  employeeNames: string[];
   onSetServerName: (index: number, name: string) => Promise<void>;
   onSave: (tableNumber: number, input: ReservationInput) => Promise<void>;
   onClear: (tableNumber: number) => Promise<void>;
@@ -65,6 +65,7 @@ export function ReservationPanel({
   tableNumber,
   reservation,
   serverNames,
+  employeeNames,
   onSetServerName,
   onSave,
   onClear,
@@ -336,10 +337,10 @@ export function ReservationPanel({
                       on the known-names list (typo'd or since renamed),
                       instead of silently dropping it when this became a
                       dropdown. */}
-                  {name !== "" && !KNOWN_SERVER_NAMES.includes(name) && (
+                  {name !== "" && !employeeNames.includes(name) && (
                     <option value={name}>{name} (custom)</option>
                   )}
-                  {KNOWN_SERVER_NAMES.map((knownName) => (
+                  {employeeNames.map((knownName) => (
                     <option key={knownName} value={knownName}>
                       {knownName}
                     </option>

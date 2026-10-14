@@ -1,13 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { groupReservationsByServer } from "@/lib/reservations";
 import { useReservations } from "@/lib/useReservations";
 import { useServerRoster } from "@/lib/useServerRoster";
 import { useEightySixedItems } from "@/lib/useEightySixedItems";
 import { ServerTableCard } from "@/components/ServerTableCard";
 import { EightySixBanner } from "@/components/EightySixBanner";
+import { NAV_BAR_CLASSNAME, NavLinkButton } from "@/components/NavLinkButton";
 
 // Read-only, shared by admin and staff alike (same live data, no editing
 // controls) — a different grouping of the same floor plan data, by server
@@ -36,14 +36,14 @@ export default function ByServerView() {
             )}
           </div>
         </div>
-        <div className="flex shrink-0 flex-col items-end gap-1 text-sm">
-          <Link href="/" className="whitespace-nowrap font-medium text-[var(--color-accent)] underline">
-            Admin view →
-          </Link>
-          <Link href="/staff" className="whitespace-nowrap font-medium text-[var(--color-accent)] underline">
-            Staff view →
-          </Link>
-        </div>
+        <nav className={NAV_BAR_CLASSNAME}>
+          <NavLinkButton href="/">
+            Admin view
+          </NavLinkButton>
+          <NavLinkButton href="/staff">
+            View as Staff
+          </NavLinkButton>
+        </nav>
       </header>
 
       {loadError ? (

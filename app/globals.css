@@ -11,6 +11,15 @@
   --color-accent: #b5502f;
   --color-accent-hover: #963f23;
 
+  /* Header nav bar: a dark pill-shaped bar (same dark brown as body text,
+     reused rather than a new hue) so it pops against the cream page
+     background, with the existing terracotta accent as its one solid
+     "active" pill - same relationship as a bright highlight button on a
+     dark bar, just in this app's own palette instead of introducing new
+     colors. */
+  --color-nav-bg: #241c14;
+  --color-nav-text: #f3ede3;
+
   /* Available ("open") — green, from the reference swatch. */
   --color-available-bg: #e9f3e5;
   --color-available-border: #5a9548;
