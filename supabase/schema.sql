@@ -59,26 +59,38 @@ create table if not exists special_notes (
 -- notify_at existed.
 alter table special_notes add column if not exists notify_at timestamptz;
 
--- The restaurant's actual employees - a real, admin-editable list (add,
--- rename, delete) backing both the server-roster slot dropdowns and the
--- Special Notes employee dropdown, instead of a fixed list baked into the
--- app's code. Renaming/deleting here only changes what's offered going
--- forward: existing reservations/servers/special_notes rows keep whatever
--- name string they already have (same "snapshot, not a foreign key" model
--- those already use for an off-list name).
+-- The restaurant's servers - a real, admin-editable list (add, rename,
+-- delete) backing the server-roster slot dropdowns, instead of a fixed
+-- list baked into the app's code. Kept separate from hostesses (below):
+-- the two roles pick from two different name lists, not a shared one.
+-- Renaming/deleting here only changes what's offered going forward:
+-- existing reservations/servers rows keep whatever name string they
+-- already have (same "snapshot, not a foreign key" model those already
+-- use for an off-list name).
 create table if not exists employees (
   id         bigint generated always as identity primary key,
   name       text not null unique,
   created_at timestamptz not null default now()
 );
 
--- Seed with the restaurant's current employees (no-op if already present).
+-- Seed with the restaurant's current servers (no-op if already present).
 insert into employees (name)
 values
   ('Alicia'), ('Aria'), ('Ariel'), ('Bianca'), ('Cortney'), ('Emon'),
   ('Faby'), ('Flora'), ('Francisco'), ('Jorge'), ('Laurel'), ('Lily'),
   ('Mariah'), ('Michelle'), ('Natasha'), ('Stevie')
 on conflict (name) do nothing;
+
+-- The restaurant's hostesses - same admin-editable model as the servers
+-- list above (employees), backing the Special Notes employee dropdown.
+-- Starts empty: unlike servers, there's no existing fixed roster to seed
+-- from, so the admin builds this list via Special Notes' "Edit hostess
+-- list" control.
+create table if not exists hostesses (
+  id         bigint generated always as identity primary key,
+  name       text not null unique,
+  created_at timestamptz not null default now()
+);
 
 -- Seed the 5 fixed server-roster slots (no-op if they already exist).
 insert into servers (slot_index, name)
@@ -93,6 +105,7 @@ alter table servers enable row level security;
 alter table eighty_sixed_items enable row level security;
 alter table special_notes enable row level security;
 alter table employees enable row level security;
+alter table hostesses enable row level security;
 
 drop policy if exists "Allow anon full access" on reservations;
 create policy "Allow anon full access" on reservations
@@ -129,7 +142,14 @@ create policy "Allow anon full access" on employees
   using (true)
   with check (true);
 
--- Realtime: broadcast changes on all five tables to subscribed clients.
+drop policy if exists "Allow anon full access" on hostesses;
+create policy "Allow anon full access" on hostesses
+  for all
+  to anon
+  using (true)
+  with check (true);
+
+-- Realtime: broadcast changes on all six tables to subscribed clients.
 -- Wrapped in existence checks so re-running this script doesn't error with
 -- "relation is already member of publication".
 do $$
@@ -167,5 +187,12 @@ begin
     where pubname = 'supabase_realtime' and tablename = 'employees'
   ) then
     alter publication supabase_realtime add table employees;
+  end if;
+
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'hostesses'
+  ) then
+    alter publication supabase_realtime add table hostesses;
   end if;
 end $$;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode, type SVGProps } from "react";
-import type { Employee } from "@/lib/employeeRows";
+import type { Hostess } from "@/lib/hostessRows";
 import type { SpecialNote } from "@/lib/specialNoteRows";
 import type { SpecialNoteInput } from "@/lib/specialNotesStore";
 
@@ -10,10 +10,10 @@ interface SpecialNotesModalProps {
   onAdd: (input: SpecialNoteInput) => Promise<void>;
   onRemove: (id: number) => Promise<void>;
   onSetNotifyAt: (id: number, notifyAt: string | null) => Promise<void>;
-  employees: Employee[];
-  onAddEmployee: (name: string) => Promise<void>;
-  onUpdateEmployee: (id: number, name: string) => Promise<void>;
-  onRemoveEmployee: (id: number) => Promise<void>;
+  hostesses: Hostess[];
+  onAddHostess: (name: string) => Promise<void>;
+  onUpdateHostess: (id: number, name: string) => Promise<void>;
+  onRemoveHostess: (id: number) => Promise<void>;
   onClose: () => void;
 }
 
@@ -124,19 +124,19 @@ export function SpecialNotesModal({
   onAdd,
   onRemove,
   onSetNotifyAt,
-  employees,
-  onAddEmployee,
-  onUpdateEmployee,
-  onRemoveEmployee,
+  hostesses,
+  onAddHostess,
+  onUpdateHostess,
+  onRemoveHostess,
   onClose,
 }: SpecialNotesModalProps) {
   const [noteDate, setNoteDate] = useState(todayYYYYMMDD);
   const [employeeName, setEmployeeName] = useState("");
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [editingEmployees, setEditingEmployees] = useState(false);
-  const [newEmployeeName, setNewEmployeeName] = useState("");
-  const [employeeListError, setEmployeeListError] = useState<string | null>(null);
+  const [editingHostesses, setEditingHostesses] = useState(false);
+  const [newHostessName, setNewHostessName] = useState("");
+  const [hostessListError, setHostessListError] = useState<string | null>(null);
   const [schedulingNoteId, setSchedulingNoteId] = useState<number | null>(null);
   const [scheduleValue, setScheduleValue] = useState("");
 
@@ -190,35 +190,35 @@ export function SpecialNotesModal({
     }
   }
 
-  async function handleAddEmployee() {
-    const trimmed = newEmployeeName.trim();
+  async function handleAddHostess() {
+    const trimmed = newHostessName.trim();
     if (!trimmed) return;
-    setEmployeeListError(null);
+    setHostessListError(null);
     try {
-      await onAddEmployee(trimmed);
-      setNewEmployeeName("");
+      await onAddHostess(trimmed);
+      setNewHostessName("");
     } catch {
-      setEmployeeListError("Couldn't add — check your connection and try again.");
+      setHostessListError("Couldn't add — check your connection and try again.");
     }
   }
 
-  async function handleRenameEmployee(employee: Employee, name: string) {
+  async function handleRenameHostess(hostess: Hostess, name: string) {
     const trimmed = name.trim();
-    if (!trimmed || trimmed === employee.name) return;
-    setEmployeeListError(null);
+    if (!trimmed || trimmed === hostess.name) return;
+    setHostessListError(null);
     try {
-      await onUpdateEmployee(employee.id, trimmed);
+      await onUpdateHostess(hostess.id, trimmed);
     } catch {
-      setEmployeeListError("Couldn't rename — check your connection and try again.");
+      setHostessListError("Couldn't rename — check your connection and try again.");
     }
   }
 
-  async function handleRemoveEmployee(id: number) {
-    setEmployeeListError(null);
+  async function handleRemoveHostess(id: number) {
+    setHostessListError(null);
     try {
-      await onRemoveEmployee(id);
+      await onRemoveHostess(id);
     } catch {
-      setEmployeeListError("Couldn't remove — check your connection and try again.");
+      setHostessListError("Couldn't remove — check your connection and try again.");
     }
   }
 
@@ -261,45 +261,45 @@ export function SpecialNotesModal({
               <FieldLabel icon={<UserIcon className="h-4 w-4" />}>Employee name</FieldLabel>
               <button
                 type="button"
-                onClick={() => setEditingEmployees((current) => !current)}
+                onClick={() => setEditingHostesses((current) => !current)}
                 className="text-xs font-medium text-[var(--color-accent)] underline underline-offset-2 hover:text-[var(--color-accent-hover)]"
               >
-                {editingEmployees ? "Done" : "Edit employee list"}
+                {editingHostesses ? "Done" : "Edit employee list"}
               </button>
             </div>
 
-            {editingEmployees ? (
+            {editingHostesses ? (
               <div className="flex flex-col gap-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] p-2.5">
                 <div className="flex items-center gap-2">
                   <input
                     className="flex-1 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1.5 text-sm shadow-sm focus:border-[var(--color-accent)] focus:outline-none"
                     placeholder="New employee name"
-                    value={newEmployeeName}
-                    onChange={(event) => setNewEmployeeName(event.target.value)}
+                    value={newHostessName}
+                    onChange={(event) => setNewHostessName(event.target.value)}
                     onKeyDown={(event) => {
-                      if (event.key === "Enter") handleAddEmployee();
+                      if (event.key === "Enter") handleAddHostess();
                     }}
                   />
                   <button
                     type="button"
-                    onClick={handleAddEmployee}
+                    onClick={handleAddHostess}
                     className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md bg-[var(--color-accent)] px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-[var(--color-accent-hover)]"
                   >
                     <PlusIcon className="h-3 w-3" />
                     Add
                   </button>
                 </div>
-                {employees.map((employee) => (
-                  <div key={employee.id} className="flex items-center gap-2">
+                {hostesses.map((hostess) => (
+                  <div key={hostess.id} className="flex items-center gap-2">
                     <input
                       className="flex-1 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1.5 text-sm shadow-sm focus:border-[var(--color-accent)] focus:outline-none"
-                      defaultValue={employee.name}
-                      onBlur={(event) => handleRenameEmployee(employee, event.target.value)}
+                      defaultValue={hostess.name}
+                      onBlur={(event) => handleRenameHostess(hostess, event.target.value)}
                     />
                     <button
                       type="button"
-                      onClick={() => handleRemoveEmployee(employee.id)}
-                      aria-label={`Remove ${employee.name} from the employee list`}
+                      onClick={() => handleRemoveHostess(hostess.id)}
+                      aria-label={`Remove ${hostess.name} from the employee list`}
                       className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[var(--color-text-muted)] transition hover:bg-[var(--color-overdue-bg)] hover:text-[var(--color-overdue-text)]"
                     >
                       <XIcon className="h-3.5 w-3.5" />
@@ -314,17 +314,17 @@ export function SpecialNotesModal({
                 onChange={(event) => setEmployeeName(event.target.value)}
               >
                 <option value="">Select employee…</option>
-                {employeeName && !employees.some((employee) => employee.name === employeeName) && (
+                {employeeName && !hostesses.some((hostess) => hostess.name === employeeName) && (
                   <option value={employeeName}>{employeeName} (custom)</option>
                 )}
-                {employees.map((employee) => (
-                  <option key={employee.id} value={employee.name}>
-                    {employee.name}
+                {hostesses.map((hostess) => (
+                  <option key={hostess.id} value={hostess.name}>
+                    {hostess.name}
                   </option>
                 ))}
               </select>
             )}
-            {employeeListError && <p className="text-xs text-[var(--color-overdue-text)]">{employeeListError}</p>}
+            {hostessListError && <p className="text-xs text-[var(--color-overdue-text)]">{hostessListError}</p>}
           </div>
 
           <label className="flex flex-col gap-1.5">

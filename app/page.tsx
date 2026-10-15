@@ -7,6 +7,7 @@ import { useServerRoster } from "@/lib/useServerRoster";
 import { useEightySixedItems } from "@/lib/useEightySixedItems";
 import { useSpecialNotes } from "@/lib/useSpecialNotes";
 import { useEmployees } from "@/lib/useEmployees";
+import { useHostesses } from "@/lib/useHostesses";
 import { StatusSummary } from "@/components/StatusSummary";
 import { FloorPlan } from "@/components/FloorPlan";
 import { ReservationPanel } from "@/components/ReservationPanel";
@@ -39,6 +40,7 @@ export default function Home() {
     setNotifyAt,
   } = useSpecialNotes();
   const { employees, addEmployee, updateEmployee, removeEmployee } = useEmployees();
+  const { hostesses, addHostess, updateHostess, removeHostess } = useHostesses();
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
   const [isSpecialNotesOpen, setIsSpecialNotesOpen] = useState(false);
 
@@ -107,8 +109,11 @@ export default function Home() {
             tableNumber={selectedTable}
             reservation={selectedTable !== null ? reservationsByTable[selectedTable] : undefined}
             serverNames={serverNames}
-            employeeNames={employees.map((employee) => employee.name)}
+            employees={employees}
             onSetServerName={setServerName}
+            onAddEmployee={addEmployee}
+            onUpdateEmployee={updateEmployee}
+            onRemoveEmployee={removeEmployee}
             onSave={(tableNumber, input) => saveReservation(tableNumber, input)}
             onClear={async (tableNumber) => {
               await clearTable(tableNumber);
@@ -125,10 +130,10 @@ export default function Home() {
           onAdd={addSpecialNote}
           onRemove={removeSpecialNote}
           onSetNotifyAt={setNotifyAt}
-          employees={employees}
-          onAddEmployee={addEmployee}
-          onUpdateEmployee={updateEmployee}
-          onRemoveEmployee={removeEmployee}
+          hostesses={hostesses}
+          onAddHostess={addHostess}
+          onUpdateHostess={updateHostess}
+          onRemoveHostess={removeHostess}
           onClose={() => setIsSpecialNotesOpen(false)}
         />
       )}

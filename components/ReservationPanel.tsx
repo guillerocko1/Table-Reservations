@@ -12,13 +12,17 @@ import {
   type ReservationInput,
   type TimeLimitMinutes,
 } from "@/lib/reservations";
+import type { Employee } from "@/lib/employeeRows";
 
 interface ReservationPanelProps {
   tableNumber: number | null;
   reservation: Reservation | undefined;
   serverNames: string[];
-  employeeNames: string[];
+  employees: Employee[];
   onSetServerName: (index: number, name: string) => Promise<void>;
+  onAddEmployee: (name: string) => Promise<void>;
+  onUpdateEmployee: (id: number, name: string) => Promise<void>;
+  onRemoveEmployee: (id: number) => Promise<void>;
   onSave: (tableNumber: number, input: ReservationInput) => Promise<void>;
   onClear: (tableNumber: number) => Promise<void>;
   onClose: () => void;
@@ -65,8 +69,11 @@ export function ReservationPanel({
   tableNumber,
   reservation,
   serverNames,
-  employeeNames,
+  employees,
   onSetServerName,
+  onAddEmployee,
+  onUpdateEmployee,
+  onRemoveEmployee,
   onSave,
   onClear,
   onClose,
@@ -77,6 +84,8 @@ export function ReservationPanel({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [draftServerNames, setDraftServerNames] = useState<string[]>(serverNames);
   const [serverNameError, setServerNameError] = useState<string | null>(null);
+  const [newKnownServerName, setNewKnownServerName] = useState("");
+  const [knownServerListError, setKnownServerListError] = useState<string | null>(null);
   // Whether the party size field shows the 1-15 dropdown or a free-typed
   // number — starts in dropdown mode unless the loaded reservation already
   // has a bigger party, so a large existing reservation's real size is
@@ -164,6 +173,38 @@ export function ReservationPanel({
       await onSetServerName(index, name);
     } catch {
       setServerNameError("Couldn't update the server list — check your connection and try again.");
+    }
+  }
+
+  async function handleAddKnownServer() {
+    const trimmed = newKnownServerName.trim();
+    if (!trimmed) return;
+    setKnownServerListError(null);
+    try {
+      await onAddEmployee(trimmed);
+      setNewKnownServerName("");
+    } catch {
+      setKnownServerListError("Couldn't add — check your connection and try again.");
+    }
+  }
+
+  async function handleRenameKnownServer(employee: Employee, name: string) {
+    const trimmed = name.trim();
+    if (!trimmed || trimmed === employee.name) return;
+    setKnownServerListError(null);
+    try {
+      await onUpdateEmployee(employee.id, trimmed);
+    } catch {
+      setKnownServerListError("Couldn't rename — check your connection and try again.");
+    }
+  }
+
+  async function handleRemoveKnownServer(id: number) {
+    setKnownServerListError(null);
+    try {
+      await onRemoveEmployee(id);
+    } catch {
+      setKnownServerListError("Couldn't remove — check your connection and try again.");
     }
   }
 
@@ -316,37 +357,82 @@ export function ReservationPanel({
           </div>
 
           {editingServerList ? (
-            <div className="flex flex-col gap-1.5 rounded-md border border-[var(--color-border)] p-2">
-              {draftServerNames.map((name, index) => (
-                <select
-                  key={index}
-                  className="rounded-md border border-[var(--color-border)] px-2 py-1 text-sm"
-                  value={name}
-                  onChange={(event) => {
-                    const value = event.target.value;
-                    setDraftServerNames((current) => {
-                      const next = [...current];
-                      next[index] = value;
-                      return next;
-                    });
-                    handleServerNameCommit(index, value);
-                  }}
-                >
-                  <option value="">— empty —</option>
-                  {/* Keeps a slot's existing name selectable even if it isn't
-                      on the known-names list (typo'd or since renamed),
-                      instead of silently dropping it when this became a
-                      dropdown. */}
-                  {name !== "" && !employeeNames.includes(name) && (
-                    <option value={name}>{name} (custom)</option>
-                  )}
-                  {employeeNames.map((knownName) => (
-                    <option key={knownName} value={knownName}>
-                      {knownName}
-                    </option>
-                  ))}
-                </select>
-              ))}
+            <div className="flex flex-col gap-3 rounded-md border border-[var(--color-border)] p-2">
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-semibold text-[var(--color-text-muted)]">Known servers</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    className="flex-1 rounded-md border border-[var(--color-border)] px-2 py-1 text-sm"
+                    placeholder="New server name"
+                    value={newKnownServerName}
+                    onChange={(event) => setNewKnownServerName(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") handleAddKnownServer();
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddKnownServer}
+                    className="whitespace-nowrap rounded-md bg-[var(--color-accent)] px-2 py-1 text-xs font-medium text-white"
+                  >
+                    Add
+                  </button>
+                </div>
+                {employees.map((employee) => (
+                  <div key={employee.id} className="flex items-center gap-2">
+                    <input
+                      className="flex-1 rounded-md border border-[var(--color-border)] px-2 py-1 text-sm"
+                      defaultValue={employee.name}
+                      onBlur={(event) => handleRenameKnownServer(employee, event.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveKnownServer(employee.id)}
+                      aria-label={`Remove ${employee.name} from the known servers list`}
+                      className="shrink-0 text-[var(--color-text-muted)]"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                {knownServerListError && (
+                  <p className="text-xs text-[var(--color-overdue-text)]">{knownServerListError}</p>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-1.5 border-t border-[var(--color-border)] pt-2">
+                <span className="text-xs font-semibold text-[var(--color-text-muted)]">Today's roster</span>
+                {draftServerNames.map((name, index) => (
+                  <select
+                    key={index}
+                    className="rounded-md border border-[var(--color-border)] px-2 py-1 text-sm"
+                    value={name}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setDraftServerNames((current) => {
+                        const next = [...current];
+                        next[index] = value;
+                        return next;
+                      });
+                      handleServerNameCommit(index, value);
+                    }}
+                  >
+                    <option value="">— empty —</option>
+                    {/* Keeps a slot's existing name selectable even if it isn't
+                        on the known-names list (typo'd or since renamed),
+                        instead of silently dropping it when this became a
+                        dropdown. */}
+                    {name !== "" && !employees.some((employee) => employee.name === name) && (
+                      <option value={name}>{name} (custom)</option>
+                    )}
+                    {employees.map((employee) => (
+                      <option key={employee.id} value={employee.name}>
+                        {employee.name}
+                      </option>
+                    ))}
+                  </select>
+                ))}
+              </div>
             </div>
           ) : (
             <select
