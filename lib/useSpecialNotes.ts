@@ -111,22 +111,25 @@ export function useSpecialNotes(): UseSpecialNotesResult {
     [notes],
   );
 
-  const markNotified = useCallback(
-    async (id: number) => {
-      const previous = notes.find((note) => note.id === id);
-      const notifiedAt = new Date().toISOString();
-      setNotes((current) => current.map((note) => (note.id === id ? { ...note, notifyAt: null, notifiedAt } : note)));
-      try {
-        await markSpecialNoteNotified(id);
-      } catch (error) {
-        if (previous) {
-          setNotes((current) => current.map((note) => (note.id === id ? previous : note)));
-        }
-        throw error;
-      }
-    },
-    [notes],
-  );
+  // Deliberately never rolls back, unlike every other mutation above: this
+  // fires when a full-screen reminder popup is dismissed, and that popup's
+  // own visibility is derived from this same note's notifyAt/notifiedAt
+  // (see app/page.tsx's dueNote). Rolling back on a failed save would
+  // silently re-open a popup the admin just closed - worse than a
+  // display/sync that's briefly ahead of the database. The save is still
+  // attempted for real (so it reaches other devices once it succeeds); a
+  // failure here just means this one device's view won out over the DB
+  // until the next successful write catches it up.
+  const markNotified = useCallback(async (id: number) => {
+    const notifiedAt = new Date().toISOString();
+    setNotes((current) => current.map((note) => (note.id === id ? { ...note, notifyAt: null, notifiedAt } : note)));
+    try {
+      await markSpecialNoteNotified(id);
+    } catch {
+      // Swallowed - see comment above. The local view already reflects
+      // "dismissed"; nothing left for a caller to react to.
+    }
+  }, []);
 
   return { notes, isConnected, addNote, removeNote, setNotifyAt, markNotified };
 }

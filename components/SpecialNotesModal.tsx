@@ -116,6 +116,15 @@ function formatNotifyAt(notifyAt: string): string {
   });
 }
 
+// Inverse of the browser's own serialization for <input type="datetime-local">
+// ("YYYY-MM-DDTHH:mm", local time, no timezone) - used to pre-fill the
+// picker with an already-scheduled notifyAt when editing it.
+function toDateTimeLocalValue(isoString: string): string {
+  const date = new Date(isoString);
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 // The note's own date has no time of day - the timestamp shown alongside
 // it is the notification's own time, not when the note was typed in:
 // notifyAt (still pending - "will be displayed at") if set, else
@@ -175,9 +184,9 @@ export function SpecialNotesModal({
     }
   }
 
-  function handleOpenScheduler(id: number) {
+  function handleOpenScheduler(id: number, existingNotifyAt?: string | null) {
     setSchedulingNoteId(id);
-    setScheduleValue("");
+    setScheduleValue(existingNotifyAt ? toDateTimeLocalValue(existingNotifyAt) : "");
   }
 
   async function handleConfirmSchedule(id: number) {
@@ -416,21 +425,7 @@ export function SpecialNotesModal({
                 </div>
                 <p className="whitespace-pre-wrap text-sm text-[var(--color-text)]">{item.note}</p>
 
-                {item.notifyAt ? (
-                  <div className="flex items-center justify-between gap-2 rounded-md bg-[var(--color-bg)] px-2.5 py-1.5">
-                    <span className="flex items-center gap-1.5 text-xs font-medium text-[var(--color-text)]">
-                      <BellIcon className="h-3.5 w-3.5 text-[var(--color-accent)]" />
-                      {formatNotifyAt(item.notifyAt)}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleCancelNotify(item.id)}
-                      className="text-xs font-medium text-[var(--color-accent)] underline underline-offset-2 hover:text-[var(--color-accent-hover)]"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : schedulingNoteId === item.id ? (
+                {schedulingNoteId === item.id ? (
                   <div className="flex flex-col gap-1.5 rounded-md bg-[var(--color-bg)] p-2">
                     <label className="flex flex-col gap-1">
                       <span className="text-xs font-semibold text-[var(--color-text)]">
@@ -450,12 +445,35 @@ export function SpecialNotesModal({
                         disabled={!scheduleValue}
                         className="whitespace-nowrap rounded-md bg-[var(--color-accent)] px-2.5 py-1 text-xs font-medium text-white transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        Schedule
+                        {item.notifyAt ? "Save" : "Schedule"}
                       </button>
                       <button
                         type="button"
                         onClick={() => setSchedulingNoteId(null)}
                         className="whitespace-nowrap px-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : item.notifyAt ? (
+                  <div className="flex items-center justify-between gap-2 rounded-md bg-[var(--color-bg)] px-2.5 py-1.5">
+                    <span className="flex items-center gap-1.5 text-xs font-medium text-[var(--color-text)]">
+                      <BellIcon className="h-3.5 w-3.5 text-[var(--color-accent)]" />
+                      {formatNotifyAt(item.notifyAt)}
+                    </span>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenScheduler(item.id, item.notifyAt)}
+                        className="text-xs font-medium text-[var(--color-accent)] underline underline-offset-2 hover:text-[var(--color-accent-hover)]"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleCancelNotify(item.id)}
+                        className="text-xs font-medium text-[var(--color-accent)] underline underline-offset-2 hover:text-[var(--color-accent-hover)]"
                       >
                         Cancel
                       </button>
