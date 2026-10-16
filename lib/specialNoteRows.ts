@@ -7,6 +7,7 @@ export interface SpecialNoteRow {
   employee_name: string;
   note: string;
   notify_at: string | null;
+  notified_at: string | null;
   created_at: string;
 }
 
@@ -16,6 +17,8 @@ export interface SpecialNote {
   employeeName: string;
   note: string;
   notifyAt: string | null;
+  notifiedAt: string | null;
+  createdAt: string;
 }
 
 export function rowToSpecialNote(row: SpecialNoteRow): SpecialNote {
@@ -25,5 +28,7 @@ export function rowToSpecialNote(row: SpecialNoteRow): SpecialNote {
     employeeName: row.employee_name,
     note: row.note,
     notifyAt: row.notify_at,
+    notifiedAt: row.notified_at,
+    createdAt: row.created_at,
   };
 }

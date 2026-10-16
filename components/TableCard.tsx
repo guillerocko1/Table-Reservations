@@ -32,6 +32,11 @@ interface TableCardProps {
    *  the server's name on the tile. Passed by both the admin and staff
    *  views. */
   serverNames?: string[];
+  /** Admin View only, when the Special Notes board shares the row with the
+   *  floor plan (see app/page.tsx) - every frame renders one size down so
+   *  the whole floor plan fits the narrower width instead of wrapping
+   *  awkwardly. Staff/By-server never pass this - unaffected, full size. */
+  compact?: boolean;
   onSelect: (tableNumber: number) => void;
 }
 
@@ -95,8 +100,8 @@ const ROUND_FRAME = "h-32 w-32 shrink-0 rounded-full";
 // just a size down.
 const SMALL_FRAME = "h-24 w-24 shrink-0 rounded-lg";
 
-// Bar's frame — same circle as a standard seat, just a size down so all 16
-// fit, edge to edge, across the same width High-Tops' 9 seats use.
+// Unreachable since the Bar zone (the only other "small" seat context) was
+// removed, kept only in case a future small seat-shaped zone needs it.
 const SMALL_SEAT_FRAME = "h-10 w-10 shrink-0 rounded-full";
 
 // Tables 34/44's frame — same height as a standard table, noticeably wider.
@@ -110,6 +115,20 @@ const TWO_TOP_FRAME = "h-28 w-24 shrink-0 rounded-lg";
 // wider (between a 2-top and the `wide` tables).
 const MEDIUM_WIDE_FRAME = "h-28 w-36 shrink-0 rounded-lg";
 
+// Compact counterparts (one size down each) for `compact` - see the prop
+// doc above. Same relationships between shapes/sizes, just scaled.
+const COMPACT_SHAPE_FRAME: Record<TableShape, string> = {
+  seat: "h-12 w-12 shrink-0 rounded-full",
+  table: "h-24 w-24 shrink-0 rounded-lg",
+  booth: "h-24 w-24 shrink-0 rounded-t-[999px] rounded-b-lg",
+};
+const COMPACT_ROUND_FRAME = "h-28 w-28 shrink-0 rounded-full";
+const COMPACT_SMALL_FRAME = "h-20 w-20 shrink-0 rounded-lg";
+const COMPACT_SMALL_SEAT_FRAME = "h-9 w-9 shrink-0 rounded-full";
+const COMPACT_WIDE_FRAME = "h-24 w-36 shrink-0 rounded-lg";
+const COMPACT_TWO_TOP_FRAME = "h-24 w-20 shrink-0 rounded-lg";
+const COMPACT_MEDIUM_WIDE_FRAME = "h-24 w-28 shrink-0 rounded-lg";
+
 export function TableCard({
   tableNumber,
   status,
@@ -122,6 +141,7 @@ export function TableCard({
   mediumWide,
   wide,
   serverNames,
+  compact,
   onSelect,
 }: TableCardProps) {
   // Only a seated table has a start time to count from — Available/Reserved
@@ -145,7 +165,13 @@ export function TableCard({
     : `Table ${tableNumber} · ${STATUS_LABELS[status]}`;
 
   if (shape === "seat") {
-    const seatFrame = small ? SMALL_SEAT_FRAME : SHAPE_FRAME.seat;
+    const seatFrame = compact
+      ? small
+        ? COMPACT_SMALL_SEAT_FRAME
+        : COMPACT_SHAPE_FRAME.seat
+      : small
+        ? SMALL_SEAT_FRAME
+        : SHAPE_FRAME.seat;
 
     return (
       <button
@@ -154,7 +180,9 @@ export function TableCard({
         title={title}
         className={`flex flex-col items-center justify-center gap-0.5 border-2 text-center transition hover:brightness-95 ${seatFrame} ${colorClass}`}
       >
-        <span className={`font-serif font-bold ${small ? "text-[10px]" : "text-sm"}`}>{tableNumber}</span>
+        <span className={`font-serif font-bold ${small ? "text-[10px]" : compact ? "text-xs" : "text-sm"}`}>
+          {tableNumber}
+        </span>
         {/* A 40px circle can't fit a third line legibly — server name takes
             priority over the seated-minutes counter when both would apply,
             full details are still one click or hover away either way. */}
@@ -166,17 +194,29 @@ export function TableCard({
     );
   }
 
-  const frameClass = round
-    ? ROUND_FRAME
-    : wide
-      ? WIDE_FRAME
-      : mediumWide
-        ? MEDIUM_WIDE_FRAME
-        : twoTop
-          ? TWO_TOP_FRAME
-          : small
-            ? SMALL_FRAME
-            : SHAPE_FRAME[shape];
+  const frameClass = compact
+    ? round
+      ? COMPACT_ROUND_FRAME
+      : wide
+        ? COMPACT_WIDE_FRAME
+        : mediumWide
+          ? COMPACT_MEDIUM_WIDE_FRAME
+          : twoTop
+            ? COMPACT_TWO_TOP_FRAME
+            : small
+              ? COMPACT_SMALL_FRAME
+              : COMPACT_SHAPE_FRAME[shape]
+    : round
+      ? ROUND_FRAME
+      : wide
+        ? WIDE_FRAME
+        : mediumWide
+          ? MEDIUM_WIDE_FRAME
+          : twoTop
+            ? TWO_TOP_FRAME
+            : small
+              ? SMALL_FRAME
+              : SHAPE_FRAME[shape];
 
   return (
     <button
@@ -184,7 +224,7 @@ export function TableCard({
       onClick={() => onSelect(tableNumber)}
       className={`flex flex-col items-center justify-center gap-1 border-2 p-2 text-center transition hover:brightness-95 ${frameClass} ${colorClass}`}
     >
-      <span className="font-serif text-xl font-bold">
+      <span className={`font-serif font-bold ${compact ? "text-base" : "text-xl"}`}>
         {tableNumber}
         {reservation && reservation.tags.length > 0 && " ★"}
       </span>

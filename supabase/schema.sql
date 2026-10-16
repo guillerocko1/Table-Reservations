@@ -46,18 +46,24 @@ create table if not exists eighty_sixed_items (
 -- means active" model eighty_sixed_items uses, just a nullable column
 -- instead of a whole row, since a note can only have one pending reminder
 -- at a time.
+-- notified_at: set once, permanently, the first time this note's reminder
+-- has actually popped up and been dismissed - unlike notify_at (cleared
+-- back to null on dismiss so a note can be rescheduled), this never
+-- clears, so "Pending" vs "Done" survives rescheduling.
 create table if not exists special_notes (
   id             bigint generated always as identity primary key,
   note_date      date not null,
   employee_name  text not null,
   note           text not null check (char_length(note) <= 500),
   notify_at      timestamptz,
+  notified_at    timestamptz,
   created_at     timestamptz not null default now()
 );
 
--- Idempotent column add for a project that already ran this file before
--- notify_at existed.
+-- Idempotent column adds for a project that already ran this file before
+-- these columns existed.
 alter table special_notes add column if not exists notify_at timestamptz;
+alter table special_notes add column if not exists notified_at timestamptz;
 
 -- The restaurant's servers - a real, admin-editable list (add, rename,
 -- delete) backing the server-roster slot dropdowns, instead of a fixed

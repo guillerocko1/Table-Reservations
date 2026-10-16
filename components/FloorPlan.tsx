@@ -12,6 +12,11 @@ interface FloorPlanProps {
    *  server's name shows on the tile. Passed by both the admin and staff
    *  views; see components/TableCard.tsx. */
   serverNames?: string[];
+  /** Admin View only, when the Special Notes board shares the row with the
+   *  floor plan (see app/page.tsx) - every TableCard renders one size down
+   *  so the whole floor plan fits the narrower width instead of wrapping
+   *  awkwardly. Staff/By-server never pass this - unaffected, full size. */
+  compact?: boolean;
 }
 
 // Mirrors the restaurant's actual layout: Bar Lounge sits in its own narrow
@@ -25,25 +30,24 @@ const BAR_LOUNGE_ZONE_ID = "bar-lounge";
 // width instead of clustering on the left — same tables, same fixed card
 // size, just distributed to fill the same area every other row in the main
 // column uses.
-const DISTRIBUTE_ZONE_IDS = new Set(["bar", "high-tops", "main-a", "main-b", "main-c"]);
+const DISTRIBUTE_ZONE_IDS = new Set(["high-tops", "main-a", "main-b", "main-c"]);
 
-// These zones render a size down from the standard frame — Bar Lounge to
-// look a little more tucked into its narrow column, and Bar because 16
-// seats need to be smaller than High-Tops' 9 to still fit the same width.
-// (The dining rows' 2-top tables get a narrower — not shorter — frame via
-// isSmallTable/twoTop below, not this zone-wide flag.)
-const SMALL_ZONE_IDS = new Set(["bar-lounge", "bar"]);
+// Bar Lounge renders a size down from the standard frame, to look a little
+// more tucked into its narrow column. (The dining rows' 2-top tables get a
+// narrower — not shorter — frame via isSmallTable/twoTop below, not this
+// zone-wide flag.)
+const SMALL_ZONE_IDS = new Set(["bar-lounge"]);
 
-export function FloorPlan({ reservationsByTable, getStatus, now, onSelectTable, serverNames }: FloorPlanProps) {
+export function FloorPlan({ reservationsByTable, getStatus, now, onSelectTable, serverNames, compact }: FloorPlanProps) {
   const barLounge = ZONES.find((zone) => zone.id === BAR_LOUNGE_ZONE_ID);
   const mainArea = ZONES.filter((zone) => zone.id !== BAR_LOUNGE_ZONE_ID);
 
-  const zoneProps = { reservationsByTable, getStatus, now, onSelectTable, serverNames };
+  const zoneProps = { reservationsByTable, getStatus, now, onSelectTable, serverNames, compact };
 
   return (
     <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
       {barLounge && (
-        <div className="lg:w-32 lg:shrink-0">
+        <div className={compact ? "lg:w-24 lg:shrink-0" : "lg:w-32 lg:shrink-0"}>
           <ZoneSection zone={barLounge} stack small {...zoneProps} />
         </div>
       )}
@@ -80,6 +84,7 @@ interface ZoneSectionProps {
    *  Bar. The dining rows' 2-top tables use twoTop instead (below), which
    *  keeps the standard row height. */
   small?: boolean;
+  compact?: boolean;
 }
 
 function ZoneSection({
@@ -92,6 +97,7 @@ function ZoneSection({
   stack,
   distribute,
   small,
+  compact,
 }: ZoneSectionProps) {
   const gapClass = zone.shape === "seat" ? "gap-2" : "gap-3";
   const justifyClass = distribute ? "justify-between" : "";
@@ -114,6 +120,7 @@ function ZoneSection({
             mediumWide={isMediumWideTable(tableNumber)}
             wide={isWideTable(tableNumber)}
             serverNames={serverNames}
+            compact={compact}
             onSelect={onSelectTable}
           />
         ))}

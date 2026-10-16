@@ -9,6 +9,7 @@ test("rowToSpecialNote: maps snake_case columns to the app's camelCase fields", 
     employee_name: "Michelle",
     note: "Covered an extra shift without being asked.",
     notify_at: null,
+    notified_at: null,
     created_at: "2026-01-15T00:00:00.000Z",
   };
   assert.deepEqual(rowToSpecialNote(row), {
@@ -17,6 +18,8 @@ test("rowToSpecialNote: maps snake_case columns to the app's camelCase fields", 
     employeeName: "Michelle",
     note: "Covered an extra shift without being asked.",
     notifyAt: null,
+    notifiedAt: null,
+    createdAt: "2026-01-15T00:00:00.000Z",
   });
 });
 
@@ -27,6 +30,7 @@ test("rowToSpecialNote: carries a scheduled notify_at through", () => {
     employee_name: "Michelle",
     note: "Covered an extra shift without being asked.",
     notify_at: "2026-01-16T15:00:00.000Z",
+    notified_at: null,
     created_at: "2026-01-15T00:00:00.000Z",
   };
   assert.deepEqual(rowToSpecialNote(row), {
@@ -35,5 +39,28 @@ test("rowToSpecialNote: carries a scheduled notify_at through", () => {
     employeeName: "Michelle",
     note: "Covered an extra shift without being asked.",
     notifyAt: "2026-01-16T15:00:00.000Z",
+    notifiedAt: null,
+    createdAt: "2026-01-15T00:00:00.000Z",
+  });
+});
+
+test("rowToSpecialNote: carries a permanent notified_at through, independent of notify_at", () => {
+  const row: SpecialNoteRow = {
+    id: 5,
+    note_date: "2026-01-15",
+    employee_name: "Michelle",
+    note: "Covered an extra shift without being asked.",
+    notify_at: null,
+    notified_at: "2026-01-16T15:05:00.000Z",
+    created_at: "2026-01-15T00:00:00.000Z",
+  };
+  assert.deepEqual(rowToSpecialNote(row), {
+    id: 5,
+    noteDate: "2026-01-15",
+    employeeName: "Michelle",
+    note: "Covered an extra shift without being asked.",
+    notifyAt: null,
+    notifiedAt: "2026-01-16T15:05:00.000Z",
+    createdAt: "2026-01-15T00:00:00.000Z",
   });
 });

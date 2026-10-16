@@ -15,10 +15,11 @@ test("bar-lounge zone covers tables 61 to 63, displayed top to bottom as 63, 62,
   assert.deepEqual(barLounge.tableNumbers, [63, 62, 61]);
 });
 
-test("bar zone covers tables 1 to 16, displayed right to left as 16 down to 1", () => {
-  const bar = ZONES.find((zone) => zone.id === "bar");
-  assert.ok(bar);
-  assert.deepEqual(bar.tableNumbers, Array.from({ length: 16 }, (_, i) => 16 - i));
+test("the bar zone has been removed - tables 1-16 are no longer bookable", () => {
+  assert.equal(ZONES.find((zone) => zone.id === "bar"), undefined);
+  for (let tableNumber = 1; tableNumber <= 16; tableNumber++) {
+    assert.ok(!ALL_TABLE_NUMBERS.includes(tableNumber), `expected table ${tableNumber} to be gone`);
+  }
 });
 
 test("high-tops zone covers tables 21 to 29, displayed right to left as 29 down to 21", () => {
@@ -40,9 +41,8 @@ test("main dining zones cover the documented ranges, displayed right to left", (
   }
 });
 
-test("bar and high-tops zones render as individual seats, dining zones as tables/booths", () => {
+test("high-tops zone renders as individual seats, dining zones as tables/booths", () => {
   const shapeById: Record<string, string> = Object.fromEntries(ZONES.map((zone) => [zone.id, zone.shape]));
-  assert.equal(shapeById["bar"], "seat");
   assert.equal(shapeById["high-tops"], "seat");
   assert.equal(shapeById["bar-lounge"], "table");
   assert.equal(shapeById["main-a"], "table");
@@ -50,8 +50,8 @@ test("bar and high-tops zones render as individual seats, dining zones as tables
   assert.equal(shapeById["main-c"], "booth");
 });
 
-test("all table numbers are unique across zones and total 48", () => {
-  assert.equal(ALL_TABLE_NUMBERS.length, 48);
+test("all table numbers are unique across zones and total 32", () => {
+  assert.equal(ALL_TABLE_NUMBERS.length, 32);
   assert.equal(new Set(ALL_TABLE_NUMBERS).size, ALL_TABLE_NUMBERS.length);
 });
 

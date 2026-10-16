@@ -116,6 +116,17 @@ function formatNotifyAt(notifyAt: string): string {
   });
 }
 
+// The note's own date has no time of day - the timestamp shown alongside
+// it is the notification's own time, not when the note was typed in:
+// notifyAt (still pending - "will be displayed at") if set, else
+// notifiedAt (already fired - "was displayed at") if set, else nothing
+// (a note with no reminder ever scheduled has no time to show).
+function notificationTimestamp(note: SpecialNote): string | null {
+  if (note.notifyAt) return formatNotifyAt(note.notifyAt);
+  if (note.notifiedAt) return formatNotifyAt(note.notifiedAt);
+  return null;
+}
+
 // Admin-only: logs a dated, 500-character note about an employee
 // (behavior, praise, an incident - whatever needs a record). Restaurant-
 // wide like the 86'd list, not tied to any table/reservation.
@@ -367,7 +378,9 @@ export function SpecialNotesModal({
               No special notes yet.
             </p>
           ) : (
-            notes.map((item) => (
+            notes.map((item) => {
+              const timestamp = notificationTimestamp(item);
+              return (
               <div
                 key={item.id}
                 className="flex flex-col gap-2 rounded-lg border border-[var(--color-border)] border-l-4 border-l-[var(--color-accent)] bg-[var(--color-surface)] p-3.5 shadow-sm"
@@ -375,16 +388,31 @@ export function SpecialNotesModal({
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-sm">
                     <span className="font-semibold text-[var(--color-accent)]">{item.employeeName}</span>
-                    <span className="text-[var(--color-text-muted)]"> · {formatNoteDate(item.noteDate)}</span>
+                    <span className="text-[var(--color-text-muted)]">
+                      {" "}
+                      · {formatNoteDate(item.noteDate)}
+                      {timestamp && ` · ${timestamp}`}
+                    </span>
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemove(item.id)}
-                    aria-label={`Remove note about ${item.employeeName} from ${formatNoteDate(item.noteDate)}`}
-                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[var(--color-text-muted)] transition hover:bg-[var(--color-overdue-bg)] hover:text-[var(--color-overdue-text)]"
-                  >
-                    <XIcon className="h-3.5 w-3.5" />
-                  </button>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-bold uppercase tracking-wide ${
+                        item.notifiedAt
+                          ? "bg-[var(--color-overdue-bg)] text-[var(--color-overdue-text)]"
+                          : "bg-[var(--color-available-bg)] text-[var(--color-available-text)]"
+                      }`}
+                    >
+                      {item.notifiedAt ? "Done" : "Pending"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemove(item.id)}
+                      aria-label={`Remove note about ${item.employeeName} from ${formatNoteDate(item.noteDate)}`}
+                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[var(--color-text-muted)] transition hover:bg-[var(--color-overdue-bg)] hover:text-[var(--color-overdue-text)]"
+                    >
+                      <XIcon className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
                 <p className="whitespace-pre-wrap text-sm text-[var(--color-text)]">{item.note}</p>
 
@@ -444,7 +472,8 @@ export function SpecialNotesModal({
                   </button>
                 )}
               </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

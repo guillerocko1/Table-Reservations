@@ -15,6 +15,7 @@ import { EightySixBanner } from "@/components/EightySixBanner";
 import { EightySixManager } from "@/components/EightySixManager";
 import { SpecialNotesModal } from "@/components/SpecialNotesModal";
 import { NoteReminderPopup } from "@/components/NoteReminderPopup";
+import { SpecialNotesBoard } from "@/components/SpecialNotesBoard";
 import { NAV_BAR_CLASSNAME, NavLinkButton, navButtonClassName } from "@/components/NavLinkButton";
 
 export default function Home() {
@@ -38,6 +39,7 @@ export default function Home() {
     addNote: addSpecialNote,
     removeNote: removeSpecialNote,
     setNotifyAt,
+    markNotified,
   } = useSpecialNotes();
   const { employees, addEmployee, updateEmployee, removeEmployee } = useEmployees();
   const { hostesses, addHostess, updateHostess, removeHostess } = useHostesses();
@@ -49,7 +51,7 @@ export default function Home() {
   const dueNote = specialNotes.find((note) => note.notifyAt && new Date(note.notifyAt) <= now);
 
   return (
-    <main className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10">
+    <main className="mx-auto flex max-w-7xl flex-col gap-6 px-6 py-10">
       <header className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           <Image src="/elenas-logo.png" alt="Elena's Restaurant logo" width={80} height={64} />
@@ -97,13 +99,31 @@ export default function Home() {
         <>
           <StatusSummary summary={summary} />
 
-          <FloorPlan
-            reservationsByTable={reservationsByTable}
-            getStatus={getStatus}
-            now={now}
-            onSelectTable={setSelectedTable}
-            serverNames={serverNames}
-          />
+          {specialNotes.length > 0 ? (
+            <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
+              <div className="min-w-0 flex-1">
+                <FloorPlan
+                  reservationsByTable={reservationsByTable}
+                  getStatus={getStatus}
+                  now={now}
+                  onSelectTable={setSelectedTable}
+                  serverNames={serverNames}
+                  compact
+                />
+              </div>
+              <div className="lg:w-64 lg:shrink-0">
+                <SpecialNotesBoard notes={specialNotes} onRemove={removeSpecialNote} narrow />
+              </div>
+            </div>
+          ) : (
+            <FloorPlan
+              reservationsByTable={reservationsByTable}
+              getStatus={getStatus}
+              now={now}
+              onSelectTable={setSelectedTable}
+              serverNames={serverNames}
+            />
+          )}
 
           <ReservationPanel
             tableNumber={selectedTable}
@@ -138,7 +158,7 @@ export default function Home() {
         />
       )}
 
-      {dueNote && <NoteReminderPopup note={dueNote} onDismiss={() => setNotifyAt(dueNote.id, null)} />}
+      {dueNote && <NoteReminderPopup note={dueNote} onDismiss={() => markNotified(dueNote.id)} />}
     </main>
   );
 }

@@ -40,6 +40,18 @@ export async function setSpecialNoteNotifyAt(id: number, notifyAt: string | null
   if (error) throw error;
 }
 
+// Called when the reminder popup is actually dismissed - clears the
+// pending reminder and permanently marks this note "Done", distinct from
+// setSpecialNoteNotifyAt(id, null) alone, which would just cancel a
+// reminder that was never shown.
+export async function markSpecialNoteNotified(id: number): Promise<void> {
+  const { error } = await supabase
+    .from("special_notes")
+    .update({ notify_at: null, notified_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw error;
+}
+
 // Any insert/delete on the table triggers a full refetch rather than
 // patching the changed row from the realtime payload - simpler, same
 // reasoning as eightySixStore's subscribe.

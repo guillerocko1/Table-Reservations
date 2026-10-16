@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   addSpecialNote,
   fetchSpecialNotes,
+  markSpecialNoteNotified,
   removeSpecialNote,
   setSpecialNoteNotifyAt,
   subscribeToSpecialNotes,
@@ -17,6 +18,7 @@ export interface UseSpecialNotesResult {
   addNote: (input: SpecialNoteInput) => Promise<void>;
   removeNote: (id: number) => Promise<void>;
   setNotifyAt: (id: number, notifyAt: string | null) => Promise<void>;
+  markNotified: (id: number) => Promise<void>;
 }
 
 export function useSpecialNotes(): UseSpecialNotesResult {
@@ -57,7 +59,10 @@ export function useSpecialNotes(): UseSpecialNotesResult {
     // with a real database-generated id - shown optimistically until the
     // insert's own realtime echo replaces the whole list with the real row.
     const tempId = -Date.now();
-    setNotes((current) => [{ id: tempId, ...input, notifyAt: null }, ...current]);
+    setNotes((current) => [
+      { id: tempId, ...input, notifyAt: null, notifiedAt: null, createdAt: new Date().toISOString() },
+      ...current,
+    ]);
     try {
       await addSpecialNote(input);
     } catch (error) {
@@ -106,5 +111,22 @@ export function useSpecialNotes(): UseSpecialNotesResult {
     [notes],
   );
 
-  return { notes, isConnected, addNote, removeNote, setNotifyAt };
+  const markNotified = useCallback(
+    async (id: number) => {
+      const previous = notes.find((note) => note.id === id);
+      const notifiedAt = new Date().toISOString();
+      setNotes((current) => current.map((note) => (note.id === id ? { ...note, notifyAt: null, notifiedAt } : note)));
+      try {
+        await markSpecialNoteNotified(id);
+      } catch (error) {
+        if (previous) {
+          setNotes((current) => current.map((note) => (note.id === id ? previous : note)));
+        }
+        throw error;
+      }
+    },
+    [notes],
+  );
+
+  return { notes, isConnected, addNote, removeNote, setNotifyAt, markNotified };
 }
